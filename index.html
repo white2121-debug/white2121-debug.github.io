@@ -49,7 +49,7 @@ nav.tabs button[aria-current="page"]{filter:none;transform:translateY(-1px);box-
 nav.tabs button[data-v="bilgi"]{--c:#34495e}nav.tabs button[data-v="sinav"]{--c:#0f6b5c}nav.tabs button[data-v="banka"]{--c:#1d5f8c}
 nav.tabs button[data-v="odev"]{--c:#6a4a9c}nav.tabs button[data-v="gecmis"]{--c:#55606c}nav.tabs button[data-v="staj"]{--c:#8a5a14}
 nav.tabs button[data-v="koor"]{--c:#a2412e}nav.tabs button[data-v="plan"]{--c:#2f7a36}nav.tabs button[data-v="kulup"]{--c:#a63f74}
-nav.tabs button[data-v="zumre"]{--c:#2d6d7f}nav.tabs button[data-v="ayar"]{--c:#3f3f46}
+nav.tabs button[data-v="zumre"]{--c:#2d6d7f}nav.tabs button[data-v="sok"]{--c:#9a5b13}nav.tabs button[data-v="ayar"]{--c:#3f3f46}
 nav.tabs button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 h1{font-family:var(--serif);font-weight:600;font-size:26px;margin:4px 0 2px;text-wrap:balance}
 h2{font-size:16px;margin:0 0 10px;letter-spacing:.2px}
@@ -149,7 +149,7 @@ dialog .ft{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;borde
 body{--sec:#0f6b5c}
 body[data-v="bilgi"]{--sec:#34495e}body[data-v="sinav"]{--sec:#0f6b5c}body[data-v="banka"]{--sec:#1d5f8c}body[data-v="odev"]{--sec:#6a4a9c}
 body[data-v="gecmis"]{--sec:#55606c}body[data-v="staj"]{--sec:#8a5a14}body[data-v="koor"]{--sec:#a2412e}body[data-v="plan"]{--sec:#2f7a36}
-body[data-v="kulup"]{--sec:#a63f74}body[data-v="zumre"]{--sec:#2d6d7f}body[data-v="ayar"]{--sec:#3f3f46}
+body[data-v="kulup"]{--sec:#a63f74}body[data-v="zumre"]{--sec:#2d6d7f}body[data-v="sok"]{--sec:#9a5b13}body[data-v="ayar"]{--sec:#3f3f46}
 body{--sec-t:color-mix(in srgb,var(--sec) 78%,var(--ink));--sec-bg:color-mix(in srgb,var(--sec) 11%,var(--card))}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body{--sec-t:color-mix(in srgb,var(--sec) 45%,#fff);--sec-bg:color-mix(in srgb,var(--sec) 30%,var(--card))} }
 :root[data-theme="dark"] body{--sec-t:color-mix(in srgb,var(--sec) 45%,#fff);--sec-bg:color-mix(in srgb,var(--sec) 30%,var(--card))}
@@ -284,6 +284,7 @@ header.top .in{max-width:none}
     <button type="button" data-v="plan">Yıllık planlar</button>
     <button type="button" data-v="kulup">Kulüpler</button>
     <button type="button" data-v="zumre">Zümreler</button>
+    <button type="button" data-v="sok">ŞÖK</button>
   </nav>
   <div class="yasal"><a href="#" data-metin="kvkk">KVKK Aydınlatma Metni</a><a href="#" data-metin="sozlesme">Kullanıcı Sözleşmesi</a></div>
 </div></header>
@@ -3625,6 +3626,220 @@ function zmKayitListesi(m, Z, sv) {
   m.append(h('div', { class: 'card', style: { marginTop: '16px' } }, h('h2', {}, 'Kayıtlı tutanaklar'), h('div', { style: { overflowX: 'auto' } }, t)));
 }
 
+
+/* ===================== ŞÖK: Şube Öğretmenler Kurulu toplantı tutanakları =====================
+   Dayanak: Ortaöğretim Kurumları Yönetmeliği md. 110 — kurul, şubede ders okutan öğretmenler ve rehberlik
+   öğretmenlerinden oluşur; kasım ve nisan aylarında toplanır; başkanı müdür veya görevlendireceği müdür yardımcısıdır;
+   kararlar oy çokluğuyla alınır, müdürün onayıyla uygulanır; tutanak katılmayanlar dâhil tüm üyelerce imzalanır. */
+const SK_TOP = { kasim: 'I. dönem (Kasım)', nisan: 'II. dönem (Nisan)', ek: 'Ek toplantı' };
+const SK_TOP_BASLIK = { kasim: 'I. DÖNEM', nisan: 'II. DÖNEM', ek: 'EK (OLAĞANÜSTÜ)' };
+const SK_MADDE = [
+  { id: 'acilis', g: 'Açılış ve yoklama.', k: 'Toplantı, kurul başkanı {BASKAN} tarafından {TARIH} tarihinde saat {SAAT}\'da {YER}\'nda açıldı. Yapılan yoklamada {SUBE} şubesinde ders okutan öğretmenlerin ve rehberlik öğretmeninin toplantıda hazır bulunduğu görüldü. Gündem maddeleri okunarak görüşmelere geçildi.' },
+  { id: 'onceki', g: 'Bir önceki şube öğretmenler kurulu toplantısında alınan kararların gözden geçirilmesi.', k: { kasim: 'Bu öğretim yılının ilk şube öğretmenler kurulu toplantısı olduğundan, {ONCEKI} eğitim öğretim yılında alınan kararlar ile öğretmenler kurulu ve zümre toplantılarında şubeyi ilgilendiren kararlar hatırlatıldı. Kararların bu yıl da aynı hassasiyetle uygulanmasına karar verildi.', nisan: 'I. dönem şube öğretmenler kurulu toplantısında alınan kararlar okundu. Kararların büyük ölçüde uygulandığı, uygulanamayan veya devam eden konuların II. dönemde takip edilmesine karar verildi.', ek: 'Son şube öğretmenler kurulu toplantısında alınan kararlar okunarak uygulanma durumları değerlendirildi.' } },
+  { id: 'genel', g: 'Şubenin genel durumu: öğrenci mevcudu, devam ve devamsızlık durumu.', k: 'Sınıf rehber öğretmeni {REHBER}, şube mevcudunun {MEVCUT} olduğunu belirtti. Devam-devamsızlık durumunun e-Okul üzerinden düzenli olarak takip edildiğini, devamsızlığı artan öğrencilerin velileriyle görüşüldüğünü bildirdi.\nÖzürsüz devamsızlığı devam eden öğrencilerin velilerine e-Okul ve telefon yoluyla bilgi verilmesine, gerekli görülen durumlarda rehberlik servisiyle birlikte veli görüşmesi yapılmasına karar verildi.' },
+  { id: 'basari', ozel: 'basari', g: 'Öğrencilerin başarı durumlarının değerlendirilmesi ve başarının artırılması için alınacak önlemler.', k: { kasim: '{DONEM} birinci yazılı sınav sonuçları ve derslere katılım durumu ders bazında değerlendirildi. Ders öğretmenleri öğrencilerin güçlü ve geliştirilmesi gereken yönlerini paylaştı.\nBaşarısı düşük öğrencilerin belirlenerek ders öğretmenlerince ek çalışma ve telafi etkinlikleri yapılmasına, öğrencilerin ve velilerinin bilgilendirilmesine, gerekli durumlarda destekleme ve yetiştirme kurslarına yönlendirilmesine karar verildi.', nisan: 'I. dönem sonu başarı durumu ile {DONEM} birinci yazılı sınav sonuçları ders bazında değerlendirildi. Sorumluluk sınavına girecek ve sınıf tekrarı riski taşıyan öğrenciler üzerinde duruldu.\nRisk taşıyan öğrencilerin velileriyle görüşülmesine, ders öğretmenlerince telafi çalışmaları yapılmasına ve öğrencilerin destekleme ve yetiştirme kurslarına yönlendirilmesine karar verildi.', ek: 'Öğrencilerin güncel başarı durumu ders bazında değerlendirildi; başarının artırılması için ders öğretmenlerince ek çalışmalar yapılmasına karar verildi.' } },
+  { id: 'program', g: 'Öğretim programlarının uygulanması, derslerin işlenişi ve dersler arası iş birliği.', k: 'Derslerin yıllık planlara ve Türkiye Yüzyılı Maarif Modeli öğretim programlarına uygun olarak işlendiği belirtildi. Ortak konularda dersler arası iş birliği yapılmasına, ödev ve proje görevlerinin öğrencilere aynı haftada yığılmayacak şekilde dağıtılmasına karar verildi.' },
+  { id: 'bep', g: 'Özel eğitim ihtiyacı olan ve kaynaştırma/bütünleştirme yoluyla eğitim alan öğrenciler için alınacak önlemler.', k: 'Şubede özel eğitim ihtiyacı olan öğrencilerin durumu görüşüldü. Bu öğrenciler için hazırlanan bireyselleştirilmiş eğitim programlarının (BEP) ders öğretmenlerince uygulanmasına, ölçme ve değerlendirmenin BEP\'e uygun yapılmasına ve gelişimlerinin rehberlik servisiyle birlikte izlenmesine karar verildi. (Şubede böyle bir öğrenci yoksa bu durum belirtilir.)' },
+  { id: 'guvenlik', g: 'Eğitim ortamları, atölye ve laboratuvarların güvenli kullanımı ile iş sağlığı ve güvenliği tedbirleri.', k: 'Sınıf, atölye ve laboratuvarlarda iş sağlığı ve güvenliği kurallarına uyulmasının önemi vurgulandı. Uygulamalı derslerde güvenlik kurallarının öğrencilere hatırlatılmasına, araç-gereç ve bilgisayarların özenli kullanımının sağlanmasına, tespit edilen eksikliklerin okul idaresine bildirilmesine karar verildi.' },
+  { id: 'gelisim', g: 'Öğrencilerin kişilik ve sosyal gelişimleri, sağlık ve beslenme durumları ile okul sağlığı çalışmaları.', k: 'Öğrencilerin sınıf içi ve okul içi davranışları, arkadaşlık ilişkileri, sağlık ve beslenme durumları değerlendirildi. Desteğe ihtiyacı olduğu düşünülen öğrencilerin rehberlik servisine yönlendirilmesine, okul sağlığı çalışmalarına şubenin katılımının sağlanmasına karar verildi.' },
+  { id: 'rehberlik', g: 'Rehberlik hizmetleri, öğrencilerin mesleki gelişimi ve yönlendirilmesi.', k: 'Rehberlik öğretmeni {REHBERLIK}, şubeye yönelik planlanan rehberlik etkinlikleri hakkında bilgi verdi. Öğrencilerin ilgi ve yeteneklerine göre meslek dalı seçimi, işletmelerde mesleki eğitim ve yükseköğretime yönlendirilmesi konularında bilgilendirme çalışmalarının sürdürülmesine karar verildi.' },
+  { id: 'etkinlik', g: 'Sosyal etkinlikler, yarışmalar, geziler, kulüp çalışmaları ve toplum hizmeti çalışmaları.', k: 'Öğrencilerin sosyal etkinliklere, kulüp çalışmalarına ve toplum hizmeti çalışmalarına katılımı değerlendirildi. Öğrencilerin ilgi duydukları yarışma ve etkinliklere teşvik edilmesine, planlanan gezilerin mevzuata uygun olarak yapılmasına karar verildi.' },
+  { id: 'cevre', g: 'Okul, aile ve çevre iş birliği.', k: 'Velilerle iletişimin güçlendirilmesi için veli toplantıları ve bireysel veli görüşmelerinin sürdürülmesine, mesleki eğitim kapsamında sektör ve işletmelerle iş birliği yapılmasına karar verildi.' },
+  { id: 'girisim', g: 'Girişimciliğin geliştirilmesi ve öğretimi destekleyici üretim faaliyetleri.', k: 'Öğrencilerin girişimcilik becerilerinin geliştirilmesi için derslerde proje ve uygulama çalışmalarına yer verilmesine, okulun imkânları ölçüsünde üretime yönelik çalışmaların planlanmasına karar verildi.' },
+  { id: 'degerler', g: 'Değerler eğitimi.', k: 'Değerler eğitiminin derslerin doğal akışı içinde, belirli gün ve haftalar ile sosyal etkinliklerle ilişkilendirilerek sürdürülmesine karar verildi.' },
+  { id: 'dilek', g: 'Dilek ve temenniler; kapanış.', k: 'Kurul başkanı, toplantıya katılan öğretmenlere teşekkür ederek başarılı bir dönem diledi. Başka söz alan olmadığından toplantı sona erdi.' }
+];
+const SK_EK = [
+  { id: 'odev', g: 'Ödev, proje ve performans görevlerinin planlanması.', k: 'Ödev, proje ve performans görevlerinin öğrencilerin hazırbulunuşluğuna uygun olarak planlanmasına, teslim tarihlerinin aynı haftada yığılmamasına ve sonuçlarının öğrencilere zamanında duyurulmasına karar verildi.' },
+  { id: 'sinav', g: 'Yazılı sınav takvimi ve sınav uygulamaları.', k: 'Yazılı sınavların okul sınav takvimine uygun olarak yapılmasına, aynı gün içinde öğrencinin ikiden fazla yazılı sınava girmemesine dikkat edilmesine ve sınav sonuçlarının analiz edilerek eksik konuların tamamlanmasına karar verildi.' },
+  { id: 'disiplin', g: 'Öğrenci davranışları, ödül ve disiplin işleri.', k: 'Öğrencilerin okul kurallarına uyumu değerlendirildi. Olumlu davranışların takdir edilmesine, olumsuz davranışların önce rehberlik ve veli iş birliğiyle ele alınmasına, gerektiğinde ilgili mevzuat çerçevesinde işlem yapılmasına karar verildi.' },
+  { id: 'telefon', g: 'Okul içinde cep telefonu ve dijital cihaz kullanımı.', k: 'Okul içinde cep telefonu ve dijital cihaz kullanımına ilişkin kurallar hatırlatıldı. Kurallara uyulmasının ders öğretmenleri ve sınıf rehber öğretmenince takip edilmesine, veliler ile iş birliği yapılmasına karar verildi.' },
+  { id: 'zorbalik', g: 'Akran zorbalığının önlenmesi ve okul güvenliği.', k: 'Akran zorbalığının önlenmesine yönelik farkındalık çalışmalarının rehberlik servisiyle birlikte yapılmasına, fark edilen durumların gecikmeden okul idaresine ve rehberlik servisine bildirilmesine karar verildi.' },
+  { id: 'tema', g: 'Eğitim öğretim yılının teması kapsamındaki çalışmalar.', k: '{YIL} eğitim öğretim yılı teması kapsamında planlanan etkinliklere şube öğrencilerinin katılımının sağlanmasına karar verildi.' },
+  { id: 'isletme', g: 'İşletmelerde mesleki eğitim ve staj hazırlıkları.', k: 'İşletmelerde mesleki eğitim ve staj sürecine ilişkin öğrencilerin bilgilendirilmesine, iş sağlığı ve güvenliği eğitimlerinin tamamlanmasına ve işletmelerle sözleşme süreçlerinin zamanında yürütülmesine karar verildi.' },
+  { id: 'mezuniyet', g: 'Mezuniyet, sınıf geçme ve sorumluluk sınavları.', k: 'Öğrencilerin sınıf geçme durumları, sorumluluk sınavları ve mezuniyet şartları hakkında öğrencilerin ve velilerin bilgilendirilmesine karar verildi.' }
+];
+const SK_SABLON = { kasim: ['acilis', 'onceki', 'genel', 'basari', 'program', 'bep', 'guvenlik', 'gelisim', 'rehberlik', 'etkinlik', 'cevre', 'girisim', 'degerler', 'dilek'], nisan: ['acilis', 'onceki', 'genel', 'basari', 'program', 'bep', 'guvenlik', 'gelisim', 'rehberlik', 'etkinlik', 'cevre', 'girisim', 'degerler', 'dilek'], ek: ['acilis', 'onceki', 'dilek'] };
+const skMadde = id => SK_MADDE.concat(SK_EK).find(x => x.id === id);
+function SKS() { S.settings.sok = S.settings.sok || {}; const K = S.settings.sok; if (!K.kayit) K.kayit = {}; if (!K.sube) K.sube = ''; if (!K.top) K.top = 'kasim'; return K; }
+const skKey = (yil, sube, top) => `${yil}|${sube}|${top}`;
+function skTarih(yil, top) {
+  try { const W = kHaftalar(yil); const T = kTakvim(yil); const sn = String(T.sinav || '').split(/\s*,\s*/).map(kParse).filter(Boolean);
+    const ref = top === 'kasim' ? sn[0] : top === 'nisan' ? sn[2] : null; if (!ref) return '';
+    const w = W.find(w => !w.tatil && w.mon > ref); return w ? zmAy(kAdd(w.mon, 2)) : ''; } catch (e) { return ''; }
+}
+function skDegiskenler(R) {
+  const k = +R.mevcutK || 0, e = +R.mevcutE || 0; const top = k + e;
+  return { YIL: R.yil, ONCEKI: zmOnceki(R.yil), SUBE: R.sube || '……', BASKAN: R.baskan || '……', REHBER: R.rehber || '……', REHBERLIK: R.rehberlik || '……', TARIH: R.tarih || '…/…/……', SAAT: R.saat || '……', YER: R.yer || '……',
+    DONEM: R.top === 'nisan' ? 'II. dönem' : 'I. dönem', MEVCUT: top ? `${top} (${k} kız, ${e} erkek)` : '…… (…… kız, …… erkek)' };
+}
+function skKararSec(k, top) { return typeof k === 'string' ? k : (k[top] || k.kasim || ''); }
+function skMaddeOlustur(m, R) { const V = skDegiskenler(R); return { id: m.id, ozel: m.ozel || '', oto: true, g: zmDoldur(m.g, V), k: zmDoldur(skKararSec(m.k, R.top), V) }; }
+function skOtoYenile(R) { R.maddeler.forEach(x => { if (!x.oto) return; const lib = skMadde(x.id); if (!lib) return; const y = skMaddeOlustur(lib, R); x.g = y.g; x.k = y.k; }); }
+function skYeniKayit(yil, sube, top, kaynak) {
+  const ben = S.settings.ben || '';
+  const R = { yil, sube, top, no: top === 'nisan' ? '2' : '1', tarih: skTarih(yil, top), saat: '15:00', yer: 'Öğretmenler Odası', baskan: '', baskanUnvan: 'Müdür Yardımcısı', rehber: ben, rehberlik: '', mevcutK: '', mevcutE: '',
+    ogretmenler: [{ ders: '', ad: ben }], basari: {}, onayAd: S.settings.mudur || '', maddeler: [] };
+  if (kaynak) { const o = JSON.parse(JSON.stringify(kaynak)); ['saat', 'yer', 'baskan', 'baskanUnvan', 'rehberlik', 'ogretmenler', 'onayAd'].forEach(x => { if (o[x]) R[x] = o[x]; }); if (o.sube === sube) ['rehber', 'mevcutK', 'mevcutE'].forEach(x => { if (o[x]) R[x] = o[x]; }); }
+  R.maddeler = (SK_SABLON[top] || SK_SABLON.kasim).map(skMadde).filter(Boolean).map(m => skMaddeOlustur(m, R));
+  return R;
+}
+function skOgretmenler(R) { return (R.ogretmenler || []).filter(o => (o.ad || '').trim()); }
+function skBaslik(R) { const v = belgeVars(); return [v.OKUL || '……………… MESLEKİ VE TEKNİK ANADOLU LİSESİ', `${R.yil} EĞİTİM ÖĞRETİM YILI`, `${trUpper(R.sube || '……')} ŞUBESİ ŞUBE ÖĞRETMENLER KURULU`, `${SK_TOP_BASLIK[R.top]} TOPLANTI TUTANAĞI`]; }
+function skBilgi(R) { const O = skOgretmenler(R); return [['Toplantı No', R.no], ['Toplantı Tarihi', R.tarih], ['Toplantı Saati', R.saat], ['Toplantı Yeri', R.yer], ['Kurul Başkanı', R.baskan ? `${R.baskan} (${R.baskanUnvan || 'Müdür Yardımcısı'})` : ''], ['Sınıf Rehber Öğretmeni', R.rehber], ['Rehberlik Öğretmeni', R.rehberlik], ['Katılanlar', O.length ? `Şubede ders okutan ${O.length} öğretmen${R.rehberlik ? ' ve rehberlik öğretmeni' : ''}` : '']].filter(x => x[1]); }
+function skEkTablo(R, m) {
+  if (m.ozel !== 'basari') return null; const B = R.basari || {}; const O = skOgretmenler(R).filter(o => (o.ders || '').trim());
+  if (!O.some(o => B[o.ders] && (B[o.ders].ort || B[o.ders].bas))) return null;
+  return [['Ders', 'Ders Öğretmeni', 'Not Ortalaması', 'Başarısız Öğrenci Sayısı']].concat(O.map(o => [o.ders, o.ad, (B[o.ders] || {}).ort || '', (B[o.ders] || {}).bas || '']));
+}
+function skImzalar(R) {
+  const L = []; if (R.baskan) L.push({ ad: R.baskan, unvan: `${R.baskanUnvan || 'Müdür Yardımcısı'}\nKurul Başkanı` });
+  skOgretmenler(R).forEach(o => { const rh = o.ad.trim() === (R.rehber || '').trim(); L.push({ ad: o.ad, unvan: (o.ders ? `${o.ders} Öğretmeni` : 'Ders Öğretmeni') + (rh ? '\nSınıf Rehber Öğretmeni' : '') }); });
+  if (R.rehber && !skOgretmenler(R).some(o => o.ad.trim() === R.rehber.trim())) L.push({ ad: R.rehber, unvan: 'Sınıf Rehber Öğretmeni' });
+  if (R.rehberlik) L.push({ ad: R.rehberlik, unvan: 'Rehberlik Öğretmeni' });
+  return L;
+}
+function skHTML(R) {
+  const B = skBaslik(R); const M = R.maddeler; const br = s => zmEsc(s).replace(/\n/g, '<br>');
+  const tab = rows => `<table class="tb">${rows.map((r, i) => `<tr>${r.map(c => i ? `<td>${zmEsc(c)}</td>` : `<th>${zmEsc(c)}</th>`).join('')}</tr>`).join('')}</table>`;
+  let h = `<div class="bas">${B.map(t => `<div>${zmEsc(t)}</div>`).join('')}</div>`;
+  h += `<table class="bilgi">${skBilgi(R).map(([a, b]) => `<tr><td class="k">${zmEsc(a)}</td><td>: ${zmEsc(b)}</td></tr>`).join('')}</table>`;
+  h += `<h3>GÜNDEM MADDELERİ</h3><ol class="gun">${M.map(m => `<li>${zmEsc(m.g)}</li>`).join('')}</ol>`;
+  h += `<h3>GÜNDEM MADDELERİNİN GÖRÜŞÜLMESİ VE ALINAN KARARLAR</h3>`;
+  M.forEach((m, i) => { const t = skEkTablo(R, m); h += `<div class="md"><p class="mb"><b>${i + 1}. ${zmEsc(m.g)}</b></p>${zmMetinHTML(m.k)}${t ? tab(t) : ''}</div>`; });
+  const I = skImzalar(R);
+  h += `<div class="imza"><div class="it">KURUL ÜYELERİ</div><div class="ig">${I.map(x => `<div><div class="ad">${zmEsc(x.ad)}</div><div>${br(x.unvan)}</div></div>`).join('')}</div>`;
+  h += `<div class="onay"><div>UYGUNDUR</div><div>${zmEsc(R.tarih)}</div><div class="ad">${zmEsc(R.onayAd || '……………………')}</div><div>Okul Müdürü</div></div></div>`;
+  const css = `@page{size:A4;margin:18mm 17mm}body{font:11pt/1.38 "Times New Roman",serif;color:#000}.page{width:176mm;padding:0}
+.bas{text-align:center;font-weight:bold;margin-bottom:10px}.bas div{margin:1px 0}
+.bilgi{border-collapse:collapse;margin:8px 0 6px}.bilgi td{padding:1px 4px;vertical-align:top}.bilgi td.k{font-weight:bold;white-space:nowrap;width:46mm}
+h3{font-size:11pt;margin:12px 0 4px;text-decoration:underline}ol.gun{margin:0;padding-left:22px}ol.gun li{margin:1px 0;text-align:justify}
+.md{margin:6px 0 8px}.md p{margin:2px 0;text-align:justify}.md p.ic{padding-left:16px}.md p.mb{margin-top:8px}
+.tb{border-collapse:collapse;width:100%;margin:5px 0;font-size:10pt}.tb th,.tb td{border:1px solid #000;padding:2px 5px}.tb th{background:#e8edf2}
+.imza{margin-top:22px;break-inside:avoid}.imza .it{text-align:center;font-weight:bold;margin-bottom:8px}
+.ig{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 10px;text-align:center;font-size:10pt}.ig .ad{font-weight:bold;margin-top:26px;font-size:11pt}
+.onay{text-align:center;margin:26px auto 0;width:60mm}.onay .ad{font-weight:bold;margin-top:26px}`;
+  const ad = `${R.yil} ${R.sube} ŞÖK ${SK_TOP[R.top]}`;
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${zmEsc(ad)}</title><style>${css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span>${zmEsc(ad)} tutanağı</span><button onclick="print()">Yazdır / PDF</button></div><div class="page">${h}</div></body></html>`;
+}
+function skDocx(R) {
+  const d = new DOCX.Doc({ font: 'Times New Roman', size: 11, margin: 1.8 });
+  skBaslik(R).forEach(t => d.p([{ t, b: true }], { align: 'center', after: 0 }));
+  d.p('', { after: 4 });
+  d.t(skBilgi(R).map(([a, b]) => [{ c: a, bold: true }, { c: ': ' + b }]), { widths: [5, 12.4], borders: false, size: 11 });
+  d.p([{ t: 'GÜNDEM MADDELERİ', b: true, u: true }], { before: 8, after: 3 });
+  R.maddeler.forEach((m, i) => d.p(`${i + 1}. ${m.g}`, { hang: 0.7, after: 1, align: 'justify' }));
+  d.p([{ t: 'GÜNDEM MADDELERİNİN GÖRÜŞÜLMESİ VE ALINAN KARARLAR', b: true, u: true }], { before: 10, after: 3 });
+  R.maddeler.forEach((m, i) => {
+    d.p([{ t: `${i + 1}. ${m.g}`, b: true }], { before: 6, after: 2, align: 'justify', keep: true });
+    String(m.k || '').split('\n').forEach(l => { const s = l.trim(); if (s) d.p(s, { align: 'justify', after: 2, ind: /^([a-zçğıöşü]\)|-|•)\s/i.test(s) ? 0.6 : 0 }); });
+    const t = skEkTablo(R, m); if (t) { d.t(t.map((r, ri) => r.map(c => ({ c, bold: !ri, shade: ri ? null : 'E8EDF2', size: 10 }))), { widths: [5.2, 5.2, 3.4, 3.6], size: 10 }); d.p('', { after: 2 }); }
+  });
+  const I = skImzalar(R); d.p([{ t: 'KURUL ÜYELERİ', b: true }], { align: 'center', before: 18, after: 6, keep: true });
+  const rows = []; for (let i = 0; i < I.length; i += 3) { const r = I.slice(i, i + 3).map(x => ({ c: `\n\n${x.ad}\n${x.unvan}`, align: 'center' })); while (r.length < 3) r.push({ c: '' }); rows.push(r); }
+  if (rows.length) d.t(rows, { widths: [5.8, 5.8, 5.8], borders: false, size: 10 });
+  d.p('', { after: 6 });
+  d.t([[{ c: '' }, { c: `UYGUNDUR\n${R.tarih}\n\n\n${R.onayAd || '……………………'}\nOkul Müdürü`, align: 'center', bold: true }, { c: '' }]], { widths: [5.8, 5.8, 5.8], borders: false, size: 11 });
+  return d.blob();
+}
+
+function viewSok(m) {
+  const K = SKS(); const sv = () => save.settings(); const yil = aktifYil();
+  m.append(h('h1', {}, 'Şube öğretmenler kurulu (ŞÖK)'), h('p', { class: 'lead' }, 'Şube öğretmenler kurulu toplantı tutanakları. Kurul; şubede ders okutan öğretmenler ve rehberlik öğretmeninden oluşur, kasım ve nisan aylarında toplanır (Ortaöğretim Kurumları Yönetmeliği md. 110). Gündem yönetmelikteki konulara göre hazır gelir; maddeleri ve karar metinlerini düzenleyebilirsiniz.'));
+  const subeInp = h('input', { type: 'text', value: K.sube, placeholder: 'ör. 10/A', style: { width: '7rem' }, onchange: e => { K.sube = e.target.value.trim().toLocaleUpperCase('tr'); sv(); render(); } });
+  m.append(h('div', { class: 'card', style: { display: 'grid', gap: '10px' } },
+    h('div', { class: 'row' }, yilAlani(render), field('Şube', subeInp),
+      field('Okul', h('input', { type: 'text', value: S.settings.okul || '', style: { width: 'min(24rem,100%)' }, onchange: e => { S.settings.okul = e.target.value.trim(); sv(); } }))),
+    field('Toplantı', seg(Object.entries(SK_TOP), K.top, v => { K.top = v; sv(); render(); }))));
+  if (!K.sube) { m.append(h('div', { class: 'card', style: { marginTop: '16px' } }, h('p', { style: { margin: 0 } }, 'Başlamak için yukarıya şube adını yazın (ör. 10/A). Her şube ve toplantı için ayrı tutanak tutulur.'))); skKayitListesi(m, K, sv); return; }
+  const key = skKey(yil, K.sube, K.top); const R = K.kayit[key];
+  if (!R) {
+    const L = Object.keys(K.kayit).sort().reverse();
+    const kopyaSel = h('select', { style: { width: 'auto', maxWidth: '22rem' } }, L.map(k => { const x = K.kayit[k]; return h('option', { value: k }, `${x.yil} · ${x.sube} · ${SK_TOP[x.top]}`); }));
+    m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '10px' } },
+      h('h2', {}, `${yil} · ${K.sube} · ${SK_TOP[K.top]}`),
+      h('p', { style: { margin: 0 } }, 'Bu toplantı için henüz tutanak yok.'),
+      h('div', { class: 'row', style: { alignItems: 'center' } },
+        h('button', { class: 'btn pri', type: 'button', onclick: () => { K.kayit[key] = skYeniKayit(yil, K.sube, K.top); sv(); render(); } }, 'Hazır şablondan oluştur'),
+        L.length ? h('span', { class: 'small muted' }, 'veya') : null,
+        L.length ? kopyaSel : null,
+        L.length ? h('button', { class: 'btn', type: 'button', onclick: () => { K.kayit[key] = skYeniKayit(yil, K.sube, K.top, K.kayit[kopyaSel.value]); sv(); render(); } }, 'Öğretmen listesini buradan al') : null),
+      h('p', { class: 'small muted', style: { margin: 0 } }, `Hazır şablon: ${(SK_SABLON[K.top] || []).length} gündem maddesi. Başka bir tutanaktan alırsanız öğretmen listesi, kurul başkanı ve toplantı yeri kopyalanır; gündem şablondan gelir.`)));
+    skKayitListesi(m, K, sv); return;
+  }
+  skEditor(m, K, R, sv); skKayitListesi(m, K, sv);
+}
+function skEditor(m, K, R, sv) {
+  const pv = kOnizleKutusu(); let acik = false, zz = null;
+  const goster = () => { acik = true; pv.goster(skHTML(R), safeName(`${R.yil}_${R.sube}_SOK_${SK_TOP[R.top]}`) + '.html', `${R.maddeler.length} gündem maddesi · ${skOgretmenler(R).length} öğretmen`, true); };
+  const tazele = () => { sv(); if (!acik) return; clearTimeout(zz); zz = setTimeout(goster, 600); };
+  let otoT = null; const inp = (lab, k, w, ph) => field(lab, h('input', { type: 'text', value: R[k] || '', placeholder: ph || '', style: { width: w || '100%' }, oninput: e => { R[k] = e.target.value; tazele(); clearTimeout(otoT); otoT = setTimeout(() => { skOtoYenile(R); ciz(); tazele(); }, 400); } }));
+  m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '10px' } },
+    h('h2', {}, 'Toplantı bilgileri'),
+    h('div', { class: 'row' }, inp('Tarih', 'tarih', '8rem'), inp('Saat', 'saat', '5rem'), inp('Toplantı no', 'no', '4rem'), inp('Yer', 'yer', '14rem')),
+    h('div', { class: 'row' }, inp('Kurul başkanı', 'baskan', '13rem', 'Ad SOYAD'), inp('Unvanı', 'baskanUnvan', '10rem'), inp('Sınıf rehber öğretmeni', 'rehber', '13rem'), inp('Rehberlik öğretmeni', 'rehberlik', '13rem')),
+    h('div', { class: 'row' }, inp('Kız öğrenci', 'mevcutK', '5rem'), inp('Erkek öğrenci', 'mevcutE', '5rem'), inp('Onaylayan okul müdürü', 'onayAd', '14rem')),
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Tarih, başkan, rehber ve öğrenci mevcudu gündem maddelerinin metnine otomatik yazılır. Metnini kendiniz değiştirdiğiniz maddeler korunur; onları güncellemek için maddedeki "Varsayılan" düğmesini kullanın.')));
+
+  /* öğretmenler ve başarı */
+  const ogBox = h('div', { style: { display: 'grid', gap: '6px' } });
+  const ogCiz = () => { ogBox.innerHTML = ''; R.basari = R.basari || {};
+    R.ogretmenler.forEach((o, i) => { const b = R.basari[o.ders] || {};
+      ogBox.append(h('div', { class: 'row', style: { alignItems: 'flex-end', gap: '6px' } },
+        field(i ? '' : 'Ders', h('input', { type: 'text', value: o.ders, placeholder: 'ör. Genel Muhasebe', style: { width: '13rem' }, onchange: e => { const eski = o.ders; o.ders = e.target.value.trim(); if (R.basari[eski]) { R.basari[o.ders] = R.basari[eski]; delete R.basari[eski]; } tazele(); ogCiz(); } })),
+        field(i ? '' : 'Öğretmen', h('input', { type: 'text', value: o.ad, placeholder: 'Ad SOYAD', style: { width: '13rem' }, oninput: e => { o.ad = e.target.value; tazele(); } })),
+        field(i ? '' : 'Not ort.', h('input', { type: 'text', value: b.ort || '', style: { width: '5rem' }, oninput: e => { (R.basari[o.ders] = R.basari[o.ders] || {}).ort = e.target.value; tazele(); } })),
+        field(i ? '' : 'Başarısız', h('input', { type: 'text', value: b.bas || '', style: { width: '5rem' }, oninput: e => { (R.basari[o.ders] = R.basari[o.ders] || {}).bas = e.target.value; tazele(); } })),
+        h('button', { class: 'btn sm ghost', type: 'button', title: 'Satırı sil', onclick: () => { R.ogretmenler.splice(i, 1); tazele(); ogCiz(); } }, '✕'))); }); };
+  ogCiz();
+  m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '8px' } },
+    h('h2', {}, 'Şubede ders okutan öğretmenler'),
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Her satıra bir ders ve öğretmeni yazın; imza bölümü bu listeden oluşur. Not ortalaması ve başarısız öğrenci sayısı isteğe bağlıdır; girerseniz "başarı durumu" maddesinin altına tablo olarak eklenir. Öğrenci adı yazmanıza gerek yoktur.'),
+    ogBox, h('div', {}, h('button', { class: 'btn sm', type: 'button', onclick: () => { R.ogretmenler.push({ ders: '', ad: '' }); ogCiz(); } }, '+ Öğretmen ekle'))));
+
+  /* gündem */
+  const liste = h('div', { style: { display: 'grid', gap: '8px' } });
+  const ciz = () => { liste.innerHTML = '';
+    R.maddeler.forEach((x, i) => { const lib = skMadde(x.id);
+      const ta = h('textarea', { rows: Math.min(10, Math.max(3, Math.ceil(String(x.k || '').length / 110) + String(x.k || '').split('\n').length - 1)), style: { width: '100%' }, oninput: e => { x.k = e.target.value; x.oto = false; tazele(); } }, x.k || '');
+      liste.append(h('div', { style: { border: '1px solid var(--line)', borderRadius: '10px', padding: '8px 10px', display: 'grid', gap: '6px', background: 'var(--card)' } },
+        h('div', { class: 'row', style: { alignItems: 'center', gap: '6px' } }, h('b', { style: { minWidth: '1.6rem' } }, `${i + 1}.`),
+          x.ozel === 'basari' ? h('span', { class: 'pill', title: 'Başarı tablosu eklenir' }, 'Başarı tablosu eklenir') : null, h('span', { style: { flex: 1 } }),
+          h('button', { class: 'btn sm ghost', type: 'button', disabled: i === 0, onclick: () => { R.maddeler.splice(i - 1, 0, R.maddeler.splice(i, 1)[0]); tazele(); ciz(); } }, '↑'),
+          h('button', { class: 'btn sm ghost', type: 'button', disabled: i === R.maddeler.length - 1, onclick: () => { R.maddeler.splice(i + 1, 0, R.maddeler.splice(i, 1)[0]); tazele(); ciz(); } }, '↓'),
+          lib ? h('button', { class: 'btn sm ghost', type: 'button', title: 'Metni güncel bilgilerle varsayılana döndür', onclick: () => { const y = skMaddeOlustur(lib, R); x.g = y.g; x.k = y.k; tazele(); ciz(); } }, 'Varsayılan') : null,
+          h('button', { class: 'btn sm ghost', type: 'button', title: 'Maddeyi sil', onclick: () => { R.maddeler.splice(i, 1); tazele(); ciz(); ekCiz(); } }, '✕')),
+        h('input', { type: 'text', value: x.g, 'aria-label': 'Gündem maddesi', style: { width: '100%', fontWeight: '600' }, oninput: e => { x.g = e.target.value; x.oto = false; tazele(); } }),
+        h('details', {}, h('summary', { class: 'small' }, 'Görüşme ve karar metni', h('span', { class: 'muted' }, ' — ' + String(x.k || '').slice(0, 90).replace(/\n/g, ' ') + (String(x.k || '').length > 90 ? '…' : ''))), ta))); }); };
+  const ekBox = h('div', { style: { display: 'grid', gap: '4px' } });
+  const ekCiz = () => { ekBox.innerHTML = ''; const v = new Set(R.maddeler.map(x => x.id)); const L = SK_MADDE.concat(SK_EK).filter(x => !v.has(x.id));
+    if (!L.length) { ekBox.append(h('p', { class: 'small muted', style: { margin: 0 } }, 'Kütüphanedeki tüm maddeler gündemde.')); return; }
+    L.forEach(x => ekBox.append(h('div', { class: 'row', style: { alignItems: 'flex-start', gap: '8px', borderBottom: '1px dashed var(--line)', padding: '4px 0' } },
+      h('button', { class: 'btn sm', type: 'button', onclick: () => { const kp = R.maddeler.findIndex(z => z.id === 'dilek'); R.maddeler.splice(kp < 0 ? R.maddeler.length : kp, 0, skMaddeOlustur(x, R)); tazele(); ciz(); ekCiz(); } }, 'Ekle'),
+      h('div', { style: { flex: 1, minWidth: 0 } }, x.g)))); };
+  m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '10px' } },
+    h('h2', {}, `Gündem maddeleri (${R.maddeler.length})`),
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Madde ve karar metinlerini düzenleyin, ↑ ↓ ile sıralayın. Karar metinlerindeki "……" yerlerini toplantıda konuşulanlara göre doldurun.'),
+    liste,
+    h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => { const kp = R.maddeler.findIndex(z => z.id === 'dilek'); R.maddeler.splice(kp < 0 ? R.maddeler.length : kp, 0, { id: 'b' + Date.now().toString(36), ozel: '', g: 'Yeni gündem maddesi', k: '' }); tazele(); ciz(); } }, '+ Boş madde ekle'),
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => { R.maddeler = (SK_SABLON[R.top] || SK_SABLON.kasim).map(skMadde).map(mm => skMaddeOlustur(mm, R)); tazele(); ciz(); ekCiz(); } }, 'Şablona sıfırla'))));
+  m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '6px' } }, h('h2', {}, 'Eklenebilecek maddeler'), ekBox));
+  ciz(); ekCiz();
+  m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '10px' } },
+    h('h2', {}, 'Tutanak'),
+    h('div', { class: 'row' }, h('button', { class: 'btn pri', type: 'button', onclick: goster }, 'Tutanağı oluştur ve önizle'),
+      h('button', { class: 'btn', type: 'button', onclick: () => download(skDocx(R), safeName(`${R.yil}_${R.sube}_SOK_${SK_TOP[R.top]}_Tutanak`) + '.docx') }, 'Word (.docx) indir')),
+    pv.box));
+}
+function skKayitListesi(m, K, sv) {
+  const L = Object.keys(K.kayit).sort().reverse(); if (!L.length) return;
+  const t = h('table', { class: 't' }, h('tr', {}, h('th', {}, 'Öğretim yılı'), h('th', {}, 'Şube'), h('th', {}, 'Toplantı'), h('th', {}, 'Tarih'), h('th', {}, '')));
+  L.forEach(k => { const R = K.kayit[k]; let sil = false; const sb = h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { if (!sil) { sil = true; sb.textContent = 'Silinsin mi?'; setTimeout(() => { sil = false; sb.textContent = 'Sil'; }, 4000); return; } delete K.kayit[k]; sv(); render(); } }, 'Sil');
+    t.append(h('tr', {}, h('td', {}, R.yil), h('td', {}, R.sube), h('td', {}, SK_TOP[R.top]), h('td', {}, R.tarih || ''),
+      h('td', {}, h('button', { class: 'btn sm', type: 'button', onclick: () => { S.settings.ogretimYili = R.yil; K.sube = R.sube; K.top = R.top; sv(); render(); window.scrollTo(0, 0); } }, 'Aç'), sb))); });
+  m.append(h('div', { class: 'card', style: { marginTop: '16px' } }, h('h2', {}, 'Kayıtlı ŞÖK tutanakları'), h('div', { style: { overflowX: 'auto' } }, t)));
+}
+
 /* Koordinatörlük (sitede kullanılmıyor) */
 const KR_TOHUM = [];
 /* (kişisel veri içerdiği için kaldırıldı) */
@@ -4509,7 +4724,7 @@ let VIEW = 'sinav';
 const W = { tur: 'donem', prog: 'orgun', bep: false, uygulama: false, yazilim: '', ders: '', sinif: 9, donem: 1, sinavNo: 1, ay: 'Şubat', tarih: '', saat: '10:00', sure: 40, units: [], counts: {}, z: [30, 50, 20], excludeUsed: true, grupSayisi: 2, ogretmenler: [], ikiSutun: false, sinifKod: '', puanMode: 'zorluk', items: [], warnings: [], seed: 1, aciklama: '', not: '' };
 
 function setView(v) { VIEW = v; $$('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false')); render(); window.scrollTo(0, 0); }
-function render() { const m = $('#main'); m.innerHTML = ''; document.body.dataset.v = VIEW; ({ bilgi: viewBilgi, sinav: viewSinav, banka: viewBanka, odev: viewOdev, gecmis: viewGecmis, staj: viewBilgi, koor: viewBilgi, plan: viewPlan, kulup: viewKulup, zumre: viewZumre, ayar: viewBilgi }[VIEW])(m); }
+function render() { const m = $('#main'); m.innerHTML = ''; document.body.dataset.v = VIEW; ({ bilgi: viewBilgi, sinav: viewSinav, banka: viewBanka, odev: viewOdev, gecmis: viewGecmis, staj: viewBilgi, koor: viewBilgi, plan: viewPlan, kulup: viewKulup, zumre: viewZumre, sok: viewSok, ayar: viewBilgi }[VIEW])(m); }
 
 /* ===================== SINAV HAZIRLA ===================== */
 function seg(options, value, onpick) { return h('div', { class: 'seg', role: 'group' }, options.map(([v, t]) => h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: () => onpick(v) }, t))); }
@@ -4929,10 +5144,10 @@ async function boot() {
   await loadState(); applyTheme();
   $$('nav.tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.v)));
   W.sure = S.settings.sure; resetZ();
-  const hv = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'staj', 'koor', 'plan', 'kulup', 'zumre', 'ayar'].includes(hv)) VIEW = hv;
+  const hv = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'staj', 'koor', 'plan', 'kulup', 'zumre', 'sok', 'ayar'].includes(hv)) VIEW = hv;
   const yb = document.getElementById('yedekBtn'); if (yb) yb.addEventListener('click', () => { setView('bilgi'); setTimeout(() => { const y = document.getElementById('yedek'); if (y) y.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); });
   if (!location.hash && !S.settings.ben) VIEW = 'bilgi';
-  window.addEventListener('hashchange', () => { const v = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'plan', 'kulup', 'zumre'].includes(v) && v !== VIEW) setView(v); });
+  window.addEventListener('hashchange', () => { const v = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'plan', 'kulup', 'zumre', 'sok'].includes(v) && v !== VIEW) setView(v); });
   setView(VIEW); setSync(Store.isCloud() ? 'ok' : 'err'); yRozet(); yUyari();
   if (false) connectCloud().then(async ok => { if (ok) { applyTheme(); setView(VIEW); yRozet(); } await yAcilis(); }).catch(() => { setSync('err'); yAcilis(); });
   else yAcilis();
