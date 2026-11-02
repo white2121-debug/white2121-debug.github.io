@@ -269,11 +269,25 @@ header.top .in{max-width:none}
 .mk-kapat{position:absolute;top:12px;right:14px;border:0;background:none;font-size:20px;cursor:pointer;color:#5d6b64}
 @media (max-width:600px){.mk-metin{padding:20px 18px 6px}.mk-alt{padding:10px 18px 14px}}
 .ghatirla small{color:#5d6b64;font-size:12px}
+
+/* kurulum ve branş kilidi */
+body.kurulum-acik > :not(#kurulum):not(#metinKutu){display:none !important}
+#kurulum{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;background:linear-gradient(160deg,#0f6b5c,#164f3c)}
+.kr-kutu{max-width:560px}
+.kr-form{display:grid;gap:12px}
+#kurulum label{display:grid;gap:4px;font-size:13px;font-weight:600;color:#5d6b64}
+#kurulum input[type=text],#kurulum select{font:16px system-ui,sans-serif;padding:10px 12px;border:1px solid #cfd8d3;border-radius:10px;color:#1d2a24;background:#fff;width:100%}
+.kr-adim{font-weight:700;color:#0f6b5c;margin-top:6px;font-size:14.5px}
+.kr-ikili{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kr-not{font-weight:400;color:#5d6b64;font-size:12.5px}
+.kr-dersler{display:grid;gap:6px;max-height:260px;overflow:auto;border:1px solid #e3e9e5;border-radius:10px;padding:10px}
+.kr-dersler small{color:#5d6b64}
+nav.tabs button.kilit::after{content:" 🔒";font-size:.8em;opacity:.85}
 </style>
 </head>
 <body>
 <header class="top"><div class="in">
-  <div class="brand"><b>Öğretmen Çantası</b><span>Muhasebe ve Finansman · <a href="https://wa.me/905468463151?text=Merhaba%2C%20%C3%96%C4%9Fretmen%20%C3%87antas%C4%B1%20hakk%C4%B1nda%20yaz%C4%B1yorum." target="_blank" rel="noopener" style="color:inherit">Bize yazın</a></span><small id="sync" class="sync" data-st="local">Bağlanıyor…</small><span id="kullanici" class="kullanici"></span></div>
+  <div class="brand"><b>Öğretmen Çantası</b><span><span id="bransAd"></span> · <a href="https://wa.me/905468463151?text=Merhaba%2C%20%C3%96%C4%9Fretmen%20%C3%87antas%C4%B1%20hakk%C4%B1nda%20yaz%C4%B1yorum." target="_blank" rel="noopener" style="color:inherit">Bize yazın</a></span><small id="sync" class="sync" data-st="local">Bağlanıyor…</small><span id="kullanici" class="kullanici"></span></div>
 <div id="uyari" hidden style="background:#fdecea;color:#8a1c1c;border-top:1px solid #f3b4b0;padding:6px 16px;font-size:13px"></div>
   <nav class="tabs" aria-label="Bölümler">
     <button type="button" data-v="bilgi">Bilgilerim</button>
@@ -3840,6 +3854,134 @@ function skKayitListesi(m, K, sv) {
   m.append(h('div', { class: 'card', style: { marginTop: '16px' } }, h('h2', {}, 'Kayıtlı ŞÖK tutanakları'), h('div', { style: { overflowX: 'auto' } }, t)));
 }
 
+
+/* ===================== PROFİL: okul türü, branş ve branş kilidi =====================
+   Profil Supabase'teki "profiller" tablosunda tutulur. Okul türü ve branşı öğretmen bir kez seçer;
+   sonradan yalnızca yönetici değiştirebilir (sunucudaki tetikleyici bunu zorunlu kılar). */
+let PROFIL = null, YONETICI = false;
+const P_OKUL = [
+  ['okuloncesi', 'Anaokulu / okul öncesi'], ['ilkokul', 'İlkokul'], ['ortaokul', 'Ortaokul / İmam Hatip Ortaokulu'],
+  ['lise', 'Anadolu / Fen / Sosyal Bilimler Lisesi'], ['aihl', 'Anadolu İmam Hatip Lisesi'], ['mtal', 'Mesleki ve Teknik Anadolu Lisesi'],
+  ['mesem', 'Mesleki Eğitim Merkezi (MESEM)'], ['acik', 'Açık Öğretim Lisesi'], ['halk', 'Halk Eğitim Merkezi'],
+  ['ozel', 'Özel eğitim kurumu'], ['bilsem', 'Bilim ve Sanat Merkezi (BİLSEM)'], ['diger', 'Diğer']];
+const P_MESLEK_OKUL = ['mtal', 'mesem', 'acik'];
+const P_ALAN_OGR = 'Alan öğretmeni (meslek dersleri)';
+const P_LISE = ['Türk Dili ve Edebiyatı', 'Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Felsefe', 'Din Kültürü ve Ahlak Bilgisi', 'İngilizce', 'Almanca', 'Fransızca', 'Arapça', 'Beden Eğitimi ve Spor', 'Görsel Sanatlar', 'Müzik', 'Bilişim Teknolojileri', 'Sağlık Bilgisi ve Trafik Kültürü', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'];
+const P_ORTA = ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce', 'Almanca', 'Arapça', 'Din Kültürü ve Ahlak Bilgisi', 'Beden Eğitimi ve Spor', 'Görsel Sanatlar', 'Müzik', 'Teknoloji ve Tasarım', 'Bilişim Teknolojileri ve Yazılım', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'];
+const P_BRANS = {
+  okuloncesi: ['Okul Öncesi Öğretmeni', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'],
+  ilkokul: ['Sınıf Öğretmeni', 'İngilizce', 'Din Kültürü ve Ahlak Bilgisi', 'Beden Eğitimi ve Spor', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'],
+  ortaokul: P_ORTA.concat(['İmam Hatip meslek dersleri']), lise: P_LISE, aihl: P_LISE.concat(['İmam Hatip meslek dersleri']),
+  mtal: [P_ALAN_OGR].concat(P_LISE), mesem: [P_ALAN_OGR].concat(P_LISE), acik: [P_ALAN_OGR].concat(P_LISE),
+  halk: ['Usta öğretici / kurs öğretmeni', 'Okuma-yazma kursu öğretmeni'].concat(P_LISE), ozel: ['Özel Eğitim', 'Sınıf Öğretmeni', 'Rehberlik ve Psikolojik Danışmanlık'],
+  bilsem: P_LISE, diger: [] };
+const P_ALANLAR = ['Muhasebe ve Finansman', 'Adalet', 'Aile ve Tüketici Hizmetleri', 'Bilişim Teknolojileri', 'Biyomedikal Cihaz Teknolojileri', 'Büro Yönetimi ve Yönetici Asistanlığı', 'Çocuk Gelişimi ve Eğitimi', 'Denizcilik', 'Elektrik-Elektronik Teknolojisi', 'Endüstriyel Otomasyon Teknolojileri', 'Gazetecilik', 'Gıda Teknolojisi', 'Grafik ve Fotoğraf', 'Güzellik ve Saç Bakım Hizmetleri', 'Halkla İlişkiler', 'Harita-Tapu-Kadastro', 'Hasta ve Yaşlı Hizmetleri', 'Hayvan Yetiştiriciliği ve Sağlığı', 'İnşaat Teknolojisi', 'Kimya Teknolojisi', 'Konaklama ve Seyahat Hizmetleri', 'Kuyumculuk Teknolojisi', 'Laboratuvar Hizmetleri', 'Makine ve Tasarım Teknolojisi', 'Matbaa Teknolojisi', 'Metal Teknolojisi', 'Mobilya ve İç Mekân Tasarımı', 'Moda Tasarım Teknolojileri', 'Motorlu Araçlar Teknolojisi', 'Pazarlama ve Perakende', 'Plastik Teknolojisi', 'Radyo-Televizyon', 'Raylı Sistemler Teknolojisi', 'Sağlık Hizmetleri', 'Tarım', 'Tekstil Teknolojisi', 'Tesisat Teknolojisi ve İklimlendirme', 'Uçak Bakım', 'Ulaştırma Hizmetleri', 'Yenilenebilir Enerji Teknolojileri', 'Yiyecek İçecek Hizmetleri'];
+const P_ILLER = ['Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Düzce', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkâri', 'Hatay', 'Iğdır', 'Isparta', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kilis', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Siirt', 'Sinop', 'Sivas', 'Şanlıurfa', 'Şırnak', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Uşak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'];
+const ICERIKLI_SEKME = ['sinav', 'banka', 'odev', 'plan', 'zumre'];
+function icerikVar(p = PROFIL) { return !!p && P_MESLEK_OKUL.includes(p.okul_turu) && p.brans === P_ALAN_OGR && p.alan === 'Muhasebe ve Finansman'; }
+function bransMetni(p = PROFIL) { if (!p) return ''; return p.brans === P_ALAN_OGR ? (p.alan || 'Meslek dersleri') : p.brans; }
+async function sbRest(yol, ayar = {}) {
+  const istek = async () => fetch(SB.url + '/rest/v1/' + yol, Object.assign({ signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined }, ayar, { headers: Object.assign({ apikey: SB.key, Authorization: 'Bearer ' + await Auth.token(), 'Content-Type': 'application/json' }, ayar.headers || {}) }));
+  let r = await istek(); if (r.status === 401) { await Auth.yenile(); r = await istek(); }
+  const j = await r.json().catch(() => null); if (!r.ok) throw new Error((j && (j.message || j.hint)) || ('Sunucu hatası ' + r.status)); return j;
+}
+async function profilYukle() {
+  const u = Auth.kullanici(); const L = await sbRest('profiller?select=*&user_id=eq.' + encodeURIComponent(u.id));
+  PROFIL = (L && L[0]) || null;
+  try { YONETICI = !!(await sbRest('rpc/yonetici_mi', { method: 'POST', body: '{}' })); } catch (e) { YONETICI = false; }
+  return PROFIL;
+}
+function kurulumEkrani(ad) {
+  return new Promise(bitti => {
+    const el = h('div', { id: 'kurulum' }); document.body.append(el); document.body.classList.add('kurulum-acik');
+    const D = { okul_turu: '', brans: '', bransDiger: '', alan: '', okul: '', il: '', ilce: '', dersler: [] };
+    const kutu = h('div', { class: 'gk-kutu kr-kutu' }); el.append(kutu);
+    const ciz = () => {
+      kutu.innerHTML = '';
+      const bL = P_BRANS[D.okul_turu] || []; const meslek = P_MESLEK_OKUL.includes(D.okul_turu) && D.brans === P_ALAN_OGR;
+      const secim = (ad, deger, secenekler, fn, bos) => h('select', { name: ad, onchange: e => { fn(e.target.value); ciz(); } }, [h('option', { value: '' }, bos)].concat(secenekler.map(s => { const [v, t] = Array.isArray(s) ? s : [s, s]; return h('option', { value: v, selected: v === deger }, t); })));
+      const lab = (t, el, not) => h('label', {}, t, el, not ? h('small', { class: 'kr-not' }, not) : null);
+      kutu.append(h('div', { class: 'gk-marka' }, h('b', {}, 'Hoş geldiniz' + (ad ? ', ' + ad.split(' ')[0] : '')), h('span', {}, 'Size uygun içerikleri gösterebilmemiz için birkaç bilgiye ihtiyacımız var. Bu ekran yalnızca bir kez gelir.')));
+      const f = h('form', { class: 'kr-form' }); kutu.append(f);
+      f.append(h('div', { class: 'kr-adim' }, '1 · Nerede çalışıyorsunuz?'));
+      f.append(lab('Okul türü', secim('okul_turu', D.okul_turu, P_OKUL, v => { D.okul_turu = v; D.brans = ''; D.alan = ''; D.dersler = []; }, 'Seçin…')));
+      if (D.okul_turu) {
+        const il = h('input', { type: 'text', list: 'kr-iller', value: D.il, placeholder: 'ör. İstanbul', oninput: e => { D.il = e.target.value; } });
+        f.append(h('div', { class: 'kr-ikili' }, lab('İl', il), lab('İlçe', h('input', { type: 'text', value: D.ilce, placeholder: 'ör. Bakırköy', oninput: e => { D.ilce = e.target.value; } }))),
+          h('datalist', { id: 'kr-iller' }, P_ILLER.map(x => h('option', { value: x }))),
+          lab('Okul adı', h('input', { type: 'text', value: D.okul, placeholder: 'ör. Atatürk Mesleki ve Teknik Anadolu Lisesi', oninput: e => { D.okul = e.target.value; } }), 'Belgelerde kullanılır; sonradan Bilgilerim\'den değiştirebilirsiniz.'));
+        f.append(h('div', { class: 'kr-adim' }, '2 · Branşınız nedir?'));
+        f.append(lab('Branş', secim('brans', D.brans, bL.concat([['__diger', 'Diğer (listede yok)']]), v => { D.brans = v; D.alan = ''; D.dersler = []; }, 'Seçin…')));
+        if (D.brans === '__diger') f.append(lab('Branşınızı yazın', h('input', { type: 'text', value: D.bransDiger, oninput: e => { D.bransDiger = e.target.value; } })));
+        if (meslek) f.append(lab('Alanınız', secim('alan', D.alan, P_ALANLAR.concat([['__diger', 'Diğer (listede yok)']]), v => { D.alan = v; D.dersler = []; }, 'Seçin…')));
+        if (meslek && D.alan === '__diger') f.append(lab('Alanınızı yazın', h('input', { type: 'text', value: D.alanDiger || '', oninput: e => { D.alanDiger = e.target.value; } })));
+        const gecici = { okul_turu: D.okul_turu, brans: D.brans, alan: D.alan };
+        if (icerikVar(gecici)) {
+          f.append(h('div', { class: 'kr-adim' }, '3 · Bu yıl hangi derslere giriyorsunuz? (isteğe bağlı)'));
+          const g = h('div', { class: 'kr-dersler' });
+          COURSES.forEach(c => g.append(h('label', { class: 'gonay' }, h('input', { type: 'checkbox', checked: D.dersler.includes(c.id), onchange: e => { D.dersler = e.target.checked ? [...new Set(D.dersler.concat(c.id))] : D.dersler.filter(x => x !== c.id); } }), h('span', {}, `${c.ad} `, h('small', {}, `(${c.sinif.join('-')}. sınıf)`)))));
+          f.append(g);
+        } else if (D.brans && (!meslek || D.alan)) {
+          f.append(h('p', { class: 'gmsj ok', style: { margin: '4px 0 0' } }, 'Branşınız için soru bankası ve yıllık planlar hazırlanıyor. Şimdilik Kulüpler ve ŞÖK gibi tüm branşlara uygun araçları kullanabilirsiniz.'));
+        }
+      }
+      f.append(h('p', { class: 'kr-not', style: { margin: '6px 0 0' } }, 'Okul türü ve branş, hesabınızın paylaşılmaması için kaydedildikten sonra değiştirilemez. Hatalı seçim yaparsanız ', h('a', { href: 'https://wa.me/905468463151', target: '_blank', rel: 'noopener' }, 'bize yazın'), '.'));
+      const msj = h('div', {}); f.append(msj);
+      const btn = h('button', { class: 'gb', type: 'submit' }, 'Kaydet ve başla'); f.append(btn);
+      f.addEventListener('submit', async e => {
+        e.preventDefault(); msj.innerHTML = '';
+        const brans = D.brans === '__diger' ? D.bransDiger.trim() : D.brans; const alan = meslek ? (D.alan === '__diger' ? (D.alanDiger || '').trim() : D.alan) : '';
+        const eksik = !D.okul_turu ? 'okul türünü' : !D.il.trim() ? 'ili' : !brans ? 'branşınızı' : (meslek && !alan) ? 'alanınızı' : '';
+        if (eksik) { msj.append(h('div', { class: 'gmsj hata' }, `Lütfen ${eksik} belirtin.`)); return; }
+        btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+        try {
+          const kayit = { user_id: Auth.kullanici().id, ad: ad || null, okul_turu: D.okul_turu, okul: D.okul.trim() || null, il: D.il.trim(), ilce: D.ilce.trim() || null, alan: alan || null, brans, dersler: icerikVar({ okul_turu: D.okul_turu, brans, alan }) ? D.dersler : [] };
+          const L = await sbRest('profiller', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(kayit) });
+          PROFIL = L[0]; el.remove(); document.body.classList.remove('kurulum-acik'); bitti(PROFIL);
+        } catch (err) { msj.append(h('div', { class: 'gmsj hata' }, 'Kaydedilemedi: ' + (err.message || err) + '. İnternet bağlantınızı kontrol edip tekrar deneyin.')); btn.disabled = false; btn.textContent = 'Kaydet ve başla'; }
+      });
+    };
+    ciz();
+  });
+}
+function profilUygula(ilk) {
+  const b = document.getElementById('bransAd'); if (b) b.textContent = bransMetni() || 'Branş seçilmedi';
+  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('kilit', ICERIKLI_SEKME.includes(x.dataset.v) && !icerikVar()));
+  if (!PROFIL) return; let deg = false; const st = S.settings;
+  if (ilk) { // kurulumda girilen okul bilgilerini belgelerde kullanılacak ayarlara aktar
+    if (PROFIL.okul && !st.okul) { st.okul = trUpper(PROFIL.okul); deg = true; }
+    if (PROFIL.il && !st.ilce) { st.ilce = trUpper([PROFIL.ilce, PROFIL.il].filter(Boolean).join(' / ')); deg = true; }
+    if (Array.isArray(PROFIL.dersler) && PROFIL.dersler.length) { const B = BS(); PROFIL.dersler.forEach(id => { if (!B.ekDersler.includes(id)) B.ekDersler.push(id); }); deg = true; }
+  }
+  if (deg) save.settings();
+}
+function viewHazirlaniyor(m, v) {
+  const ad = { sinav: 'Sınav hazırla', banka: 'Soru bankası', odev: 'Ödevler', plan: 'Yıllık planlar', zumre: 'Zümreler' }[v] || '';
+  m.append(h('h1', {}, ad), h('div', { class: 'card', style: { maxWidth: '680px', display: 'grid', gap: '12px' } },
+    h('h2', { style: { margin: 0 } }, '🔒 Branşınız için içerik hazırlanıyor'),
+    h('p', { style: { margin: 0 } }, `${ad} bölümü şu anda Muhasebe ve Finansman alan öğretmenleri için hazır. ${bransMetni() ? '"' + bransMetni() + '" branşı' : 'Branşınız'} için soru bankası, yıllık planlar ve zümre şablonları üzerinde çalışıyoruz.`),
+    h('p', { style: { margin: 0 } }, 'Bu sırada tüm branşlara uygun araçları kullanabilirsiniz:'),
+    h('div', { class: 'row' }, h('button', { class: 'btn pri', type: 'button', onclick: () => setView('kulup') }, 'Kulüpler'), h('button', { class: 'btn pri', type: 'button', onclick: () => setView('sok') }, 'ŞÖK tutanağı'), h('button', { class: 'btn', type: 'button', onclick: () => setView('bilgi') }, 'Bilgilerim')),
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Branşınızla ilgili önerileriniz ya da örnek belgeleriniz varsa sol üstteki "Bize yazın" bağlantısından paylaşabilirsiniz.')));
+}
+function profilKarti() {
+  const P = PROFIL || {}; const okul = (P_OKUL.find(x => x[0] === P.okul_turu) || [, P.okul_turu || '—'])[1];
+  const satir = (a, b) => h('div', { class: 'row', style: { gap: '6px' } }, h('b', { style: { minWidth: '9rem' } }, a), h('span', {}, b || '—'));
+  return h('div', { class: 'card', style: { display: 'grid', gap: '6px', marginBottom: '16px' } },
+    h('h2', {}, 'Okul türü ve branş'),
+    satir('Okul türü', okul), P.alan ? satir('Alan', P.alan) : null, satir('Branş', P.brans), satir('İl / ilçe', [P.il, P.ilce].filter(Boolean).join(' / ')),
+    h('p', { class: 'small muted', style: { margin: '4px 0 0' } }, 'Okul türü ve branş, hesap paylaşımını önlemek için öğretmen tarafından değiştirilemez. Değişiklik için ', h('a', { href: 'https://wa.me/905468463151?text=' + encodeURIComponent('Merhaba, Öğretmen Çantası hesabımda branş değişikliği istiyorum. E-postam: ' + ((Auth.kullanici() || {}).email || '')), target: '_blank', rel: 'noopener' }, 'bize yazın'), '.'));
+}
+function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgilerim
+  const st = S.settings; const sv = () => { save.settings(); toast('Bilgileriniz kaydedildi.'); };
+  const inp = (lab, k, ph, w) => field(lab, h('input', { type: 'text', value: st[k] || '', placeholder: ph || '', style: { width: w || 'min(24rem,100%)' }, onchange: e => { st[k] = e.target.value.trim(); sv(); } }));
+  m.append(h('h1', {}, 'Bilgilerim'), h('p', { class: 'lead' }, 'Adınız, okulunuz ve müdürünüz hazırladığınız kulüp ve ŞÖK belgelerine otomatik yazılır. Bilgileriniz hesabınıza kaydedilir.'));
+  m.append(profilKarti());
+  m.append(h('div', { class: 'card', style: { display: 'grid', gap: '10px' } }, h('h2', {}, 'Kimlik ve okul'),
+    h('div', { class: 'row' }, inp('Adınız soyadınız', 'ben', 'Ad SOYAD', '16rem'), inp('Okul adı', 'okul'), inp('Okul müdürü', 'mudur', 'Ad SOYAD', '14rem'), inp('İlçe / il', 'ilce', 'BAKIRKÖY / İSTANBUL', '14rem'))));
+  m.append(hesapSilKart());
+}
+
 /* Koordinatörlük (sitede kullanılmıyor) */
 const KR_TOHUM = [];
 /* (kişisel veri içerdiği için kaldırıldı) */
@@ -4577,7 +4719,7 @@ function viewBilgi0(m) {
       h('li', {}, `Yıllık planlar: ${pl.size} plan “★ Benim derslerim” grubunda.`),
       h('li', {}, `Kulüpler: ${B.kulupler.length ? B.kulupler.length + ' kulübünüz en üstte ve varsayılan seçili.' : 'kulüp seçilmedi.'}`))));
 }
-function viewBilgi(m) { viewBilgi0(m); ayarKartlari(m); m.append(hesapSilKart()); }
+function viewBilgi(m) { viewBilgi0(m); const ilk = m.querySelector('h1 ~ p.lead'); const pk = profilKarti(); if (ilk) ilk.after(pk); else m.prepend(pk); ayarKartlari(m); m.append(hesapSilKart()); }
 function hesapSilKart() {
   const u = Auth.kullanici() || {}; const IFADE = 'HESABIMI SİL';
   const durum = h('div', { class: 'small', style: { color: '#b42318' } });
@@ -4724,7 +4866,7 @@ let VIEW = 'sinav';
 const W = { tur: 'donem', prog: 'orgun', bep: false, uygulama: false, yazilim: '', ders: '', sinif: 9, donem: 1, sinavNo: 1, ay: 'Şubat', tarih: '', saat: '10:00', sure: 40, units: [], counts: {}, z: [30, 50, 20], excludeUsed: true, grupSayisi: 2, ogretmenler: [], ikiSutun: false, sinifKod: '', puanMode: 'zorluk', items: [], warnings: [], seed: 1, aciklama: '', not: '' };
 
 function setView(v) { VIEW = v; $$('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false')); render(); window.scrollTo(0, 0); }
-function render() { const m = $('#main'); m.innerHTML = ''; document.body.dataset.v = VIEW; ({ bilgi: viewBilgi, sinav: viewSinav, banka: viewBanka, odev: viewOdev, gecmis: viewGecmis, staj: viewBilgi, koor: viewBilgi, plan: viewPlan, kulup: viewKulup, zumre: viewZumre, sok: viewSok, ayar: viewBilgi }[VIEW])(m); }
+function render() { const m = $('#main'); m.innerHTML = ''; document.body.dataset.v = VIEW; if (ICERIKLI_SEKME.includes(VIEW) && !icerikVar()) { viewHazirlaniyor(m, VIEW); return; } if ((VIEW === 'bilgi' || VIEW === 'ayar' || VIEW === 'staj' || VIEW === 'koor') && !icerikVar()) { viewBilgiSade(m); return; } ({ bilgi: viewBilgi, sinav: viewSinav, banka: viewBanka, odev: viewOdev, gecmis: viewGecmis, staj: viewBilgi, koor: viewBilgi, plan: viewPlan, kulup: viewKulup, zumre: viewZumre, sok: viewSok, ayar: viewBilgi }[VIEW])(m); }
 
 /* ===================== SINAV HAZIRLA ===================== */
 function seg(options, value, onpick) { return h('div', { class: 'seg', role: 'group' }, options.map(([v, t]) => h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: () => onpick(v) }, t))); }
@@ -5158,8 +5300,12 @@ function acilisHatasi(m) {
   setSync('err');
 }
 document.addEventListener('DOMContentLoaded', () => Auth.baslat(async ({ ad }) => {
+  let ilkKurulum = false;
+  try { if (!(await profilYukle())) { COURSES = JSON.parse($('#data-courses').textContent); await kurulumEkrani(ad); ilkKurulum = true; } }
+  catch (e) { acilisHatasi('Hesap bilgileriniz alınamadı: ' + (e && e.message || e)); return; }
+  if (!location.hash && !icerikVar()) VIEW = 'bilgi';
   const bekci = setTimeout(() => acilisHatasi('Bağlantı beklenenden uzun sürdü.'), 25000);
-  try { await boot(); } catch (e) { clearTimeout(bekci); acilisHatasi('Beklenmeyen bir hata oluştu: ' + (e && e.message || e)); return; }
+  try { await boot(); profilUygula(ilkKurulum); if (ilkKurulum) render(); } catch (e) { clearTimeout(bekci); acilisHatasi('Beklenmeyen bir hata oluştu: ' + (e && e.message || e)); return; }
   clearTimeout(bekci);
   if (ad && !S.settings.ben) { S.settings.ben = ad; save.settings(); render(); } // kayıtta yazılan ad Bilgilerim'e gelir
 }));
