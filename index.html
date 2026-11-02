@@ -339,6 +339,18 @@ body[data-v="yonetim"]{--sec:#b42318}
 .yn-tel{display:flex;align-items:center;gap:8px;margin-top:4px}
 a.btn.yn-wa{background:#1f9d55;border-color:#1f9d55;color:#fff;padding:3px 10px;font-size:12.5px;min-height:0}
 .yn-duzen a.btn.yn-wa{padding:8px 14px;font-size:14px}
+
+.yn-ilet{display:grid;gap:4px;justify-items:start}
+.yn-dugmeler{display:flex;gap:6px;flex-wrap:nowrap}
+.yn-tablo td:nth-child(2){min-width:210px}
+a.yn-d{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:8px;font:600 13px system-ui,sans-serif;text-decoration:none;border:1px solid;white-space:nowrap;transition:background .15s}
+a.yn-d.posta{color:#1e4f8a;border-color:#bcd0ea;background:#f2f6fc}
+a.yn-d.posta:hover{background:#e3ecf8}
+a.yn-d.wa{color:#fff;border-color:#1f9d55;background:#1f9d55}
+a.yn-d.wa:hover{background:#17864a}
+a.yn-d:focus-visible{outline:2px solid #1d2a24;outline-offset:2px}
+.yn-tno{font-size:12.5px;color:#5d6b64;font-variant-numeric:tabular-nums}
+.yn-filtre input[type=search]{min-width:min(20rem,100%)}
 </style>
 </head>
 <body>
@@ -4132,6 +4144,18 @@ function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgi
 let YN = { liste: null, ara: '', tur: '', durum: '', sec: null, hata: '' };
 const ynTarih = t => t ? new Date(t).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 const ynOkul = k => (P_OKUL.find(x => x[0] === k) || [, k || '—'])[1];
+const YN_IKON = {
+  posta: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 6h18v12H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="m3 7 9 6 9-6"/></svg>',
+  sohbet: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 20l1.4-4.2A8 8 0 1 1 8.6 19z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 10.5c.5 2 2 3.5 4 4"/></svg>' };
+function ynIletisim(u) {
+  const d = telNorm(u.telefon); const dur = e => e.stopPropagation();
+  const ilk = (u.ad || '').trim().split(/\s+/)[0] || ''; const ad = ilk ? ilk.charAt(0).toLocaleUpperCase('tr') + ilk.slice(1).toLocaleLowerCase('tr') : '';
+  return h('div', { class: 'yn-ilet' },
+    h('div', { class: 'yn-dugmeler' },
+      h('a', { class: 'yn-d posta', href: 'mailto:' + u.eposta + '?subject=' + encodeURIComponent('Öğretmen Çantası') + '&body=' + encodeURIComponent('Merhaba ' + ad + ' Hocam,\n\n'), onclick: dur, title: u.eposta, html: YN_IKON.posta + '<span>E-posta</span>' }),
+      d ? h('a', { class: 'yn-d wa', href: 'https://wa.me/90' + d + '?text=' + encodeURIComponent('Merhaba ' + ad + ' Hocam, Öğretmen Çantası\'ndan yazıyorum.'), target: '_blank', rel: 'noopener', onclick: dur, title: telGoster(d), html: YN_IKON.sohbet + '<span>WhatsApp</span>' }) : null),
+    h('span', { class: 'yn-tno' }, d ? telGoster(d) : 'Telefon girilmemiş'));
+}
 function ynWa(u, metin) { const d = telNorm(u.telefon); return d ? h('a', { class: 'btn yn-wa', href: 'https://wa.me/90' + d + '?text=' + encodeURIComponent(metin || ('Merhaba ' + ((u.ad || '').split(' ')[0] || '') + ' Hocam, Öğretmen Çantası\'ndan yazıyorum.')), target: '_blank', rel: 'noopener', onclick: e => e.stopPropagation() }, 'WhatsApp') : null; }
 function ynBrans(u) { if (!u.brans) return ''; return u.brans === P_ALAN_OGR ? `${u.alan || 'Meslek'}` + (u.dal ? ` · ${u.dal}` : '') : u.brans; }
 async function ynYukle() {
@@ -4179,7 +4203,7 @@ function ynDuzenle(u, kapat) {
         if (u.user_id === (Auth.kullanici() || {}).id) { PROFIL = L[0]; profilUygula(); }
       } catch (e) { msj.innerHTML = ''; msj.append(h('div', { class: 'gmsj hata' }, 'Kaydedilemedi: ' + (e.message || e))); btn.disabled = false; btn.textContent = 'Değişikliği kaydet'; }
     } }, 'Değişikliği kaydet');
-    kutu.append(h('div', { class: 'row' }, btn, h('a', { class: 'btn', href: 'mailto:' + u.eposta }, 'E-posta gönder'), ynWa(u)), msj,
+    kutu.append(h('div', { class: 'row', style: { alignItems: 'center' } }, btn, ynIletisim(u)), msj,
       h('p', { class: 'small muted', style: { margin: 0 } }, 'Branş değişikliğini öğretmen "Bize yazın" bağlantısından istediğinde buradan yapın. Öğretmen bu alanları kendisi değiştiremez.'));
   };
   ciz(); return kutu;
@@ -4213,18 +4237,19 @@ function viewYonetim(m) {
   kart.append(h('div', { class: 'row yn-filtre' }, ara,
     h('select', { onchange: e => { YN.tur = e.target.value; render(); } }, [h('option', { value: '' }, 'Tüm okul türleri')].concat(P_OKUL.map(([v, t]) => h('option', { value: v, selected: v === YN.tur }, t)))),
     h('select', { onchange: e => { YN.durum = e.target.value; render(); } }, [['', 'Tüm üyeler'], ['telefonlu', 'Telefonunu paylaşanlar'], ['muhasebe', 'İçeriği hazır olanlar (Muhasebe)'], ['kurulumsuz', 'Kurulumu tamamlamayanlar'], ['onaysiz', 'E-postası onaylanmamış']].map(([v, t]) => h('option', { value: v, selected: v === YN.durum }, t)))));
-  const tablo = h('table', { class: 'yn-tablo' }, h('thead', {}, h('tr', {}, ['Öğretmen', 'Branş', 'Okul / il', 'Kayıt', 'Son giriş'].map(x => h('th', {}, x)))));
+  const tablo = h('table', { class: 'yn-tablo' }, h('thead', {}, h('tr', {}, ['Öğretmen', 'İletişim', 'Branş', 'Okul / il', 'Kayıt', 'Son giriş'].map(x => h('th', {}, x)))));
   const tb = h('tbody', {}); tablo.append(tb);
   F.slice(0, 500).forEach(u => {
     const tr = h('tr', { tabindex: 0, class: YN.sec === u.user_id ? 'sec' : '', onclick: () => { YN.sec = YN.sec === u.user_id ? null : u.user_id; render(); }, onkeydown: e => { if (e.key === 'Enter') tr.click(); } },
-      h('td', {}, h('b', {}, u.ad || '—'), h('div', { class: 'small muted' }, u.eposta, u.onayli ? '' : ' · onaysız'), telNorm(u.telefon) ? h('div', { class: 'yn-tel' }, h('span', { class: 'small' }, telGoster(telNorm(u.telefon))), ynWa(u)) : null),
+      h('td', {}, h('b', {}, u.ad || '—'), h('div', { class: 'small muted' }, u.eposta, u.onayli ? '' : ' · e-posta onaylanmamış')),
+      h('td', {}, ynIletisim(u)),
       h('td', {}, u.okul_turu ? h('span', {}, ynBrans(u), h('div', { class: 'small muted' }, ynOkul(u.okul_turu))) : h('span', { class: 'yn-rozet' }, 'Kurulum yapılmadı')),
       h('td', {}, h('span', {}, u.okul || '—'), h('div', { class: 'small muted' }, [u.ilce, u.il].filter(Boolean).join(' / '))),
       h('td', { class: 'num' }, ynTarih(u.kayit)), h('td', { class: 'num' }, ynTarih(u.son_giris)));
     tb.append(tr);
-    if (YN.sec === u.user_id) tb.append(h('tr', { class: 'yn-acik' }, h('td', { colspan: 5 }, ynDuzenle(u, () => { YN.sec = null; render(); }))));
+    if (YN.sec === u.user_id) tb.append(h('tr', { class: 'yn-acik' }, h('td', { colspan: 6 }, ynDuzenle(u, () => { YN.sec = null; render(); }))));
   });
-  if (!F.length) tb.append(h('tr', {}, h('td', { colspan: 5, class: 'muted' }, 'Eşleşen üye yok.')));
+  if (!F.length) tb.append(h('tr', {}, h('td', { colspan: 6, class: 'muted' }, 'Eşleşen üye yok.')));
   kart.append(h('div', { class: 'yn-kay' }, tablo));
   if (F.length > 500) kart.append(h('p', { class: 'small muted' }, 'İlk 500 üye gösteriliyor; aramayı daraltın.'));
   m.append(kart);
