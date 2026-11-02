@@ -4050,7 +4050,7 @@ function profilKarti() {
   const satir = (a, b) => h('div', { class: 'row', style: { gap: '6px' } }, h('b', { style: { minWidth: '9rem' } }, a), h('span', {}, b || '—'));
   return h('div', { class: 'card', style: { display: 'grid', gap: '6px', marginBottom: '16px' } },
     h('h2', {}, 'Okul türü ve branş'),
-    satir('Okul türü', okul), P.alan ? satir('Alan', P.alan) : null, P.dal ? satir('Dal', P.dal) : null, satir('Branş', P.brans), Array.isArray(P.dersler) && P.dersler.length ? satir('Dersleriniz', P.dersler.map(k => { const [sn, ad] = String(k).split('|'); return ad ? `${ad} (${sn === 'S' ? 'seçmeli' : sn + '. sınıf'})` : k; }).join(', ')) : null, satir('İl / ilçe', [P.il, P.ilce].filter(Boolean).join(' / ')),
+    satir('Okul türü', okul), satir('Branş', P.brans === P_ALAN_OGR ? `${P.alan || 'Meslek dersleri'} Alan Öğretmeni` + (P.dal ? (P.dal === 'Birden fazla dal' ? ' (birden fazla dal)' : ` (${P.dal} Dalı)`) : '') : P.brans), Array.isArray(P.dersler) && P.dersler.length ? satir('Dersleriniz', P.dersler.map(k => { const [sn, ad] = String(k).split('|'); return ad ? `${ad} (${sn === 'S' ? 'seçmeli' : sn + '. sınıf'})` : k; }).join(', ')) : null, satir('İl / ilçe', [P.il, P.ilce].filter(Boolean).join(' / ')),
     h('p', { class: 'small muted', style: { margin: '4px 0 0' } }, 'Okul türü ve branş, hesap paylaşımını önlemek için öğretmen tarafından değiştirilemez. Değişiklik için ', h('a', { href: 'https://wa.me/905468463151?text=' + encodeURIComponent('Merhaba, Öğretmen Çantası hesabımda branş değişikliği istiyorum. E-postam: ' + ((Auth.kullanici() || {}).email || '')), target: '_blank', rel: 'noopener' }, 'bize yazın'), '.'));
 }
 function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgilerim
