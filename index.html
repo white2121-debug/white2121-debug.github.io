@@ -335,6 +335,10 @@ body[data-v="yonetim"]{--sec:#b42318}
 .yn-duzen{display:grid;gap:10px;padding:6px 2px}
 .yn-alanlar{display:flex;flex-wrap:wrap;gap:10px}
 .yn-alanlar select{max-width:22rem}
+
+.yn-tel{display:flex;align-items:center;gap:8px;margin-top:4px}
+a.btn.yn-wa{background:#1f9d55;border-color:#1f9d55;color:#fff;padding:3px 10px;font-size:12.5px;min-height:0}
+.yn-duzen a.btn.yn-wa{padding:8px 14px;font-size:14px}
 </style>
 </head>
 <body>
@@ -692,8 +696,8 @@ function safeName(s) { return String(s).replace(/[\\/:*?"<>|]+/g, '').replace(/\
 
 
 /* ===================== YASAL METİNLER (KVKK, Kullanıcı Sözleşmesi) ===================== */
-const YASAL = { surum: '1.0', kvkk: `<h2>Kişisel Verilerin Korunması Aydınlatma Metni</h2>
-<p class="yt">Sürüm 1.0 · Yürürlük tarihi: 2 Kasım 2026</p>
+const YASAL = { surum: '1.1', kvkk: `<h2>Kişisel Verilerin Korunması Aydınlatma Metni</h2>
+<p class="yt">Sürüm 1.0 · Yürürlük tarihi: 3 Kasım 2026</p>
 <p>Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) 10. maddesi uyarınca, <b>ogretmencantasi.com.tr</b> adresinde sunulan Öğretmen Çantası hizmetini kullanan öğretmenleri kişisel verilerinin nasıl işlendiği konusunda bilgilendirmek amacıyla hazırlanmıştır.</p>
 
 <h3>1. Veri sorumlusu</h3>
@@ -701,7 +705,7 @@ const YASAL = { surum: '1.0', kvkk: `<h2>Kişisel Verilerin Korunması Aydınlat
 
 <h3>2. İşlenen kişisel veriler</h3>
 <ul>
-<li><b>Kimlik ve iletişim:</b> ad soyad, e-posta adresi.</li>
+<li><b>Kimlik ve iletişim:</b> ad soyad, e-posta adresi ve Bilgilerim bölümüne isteğe bağlı olarak girdiğiniz cep telefonu numarası.</li>
 <li><b>Hesap güvenliği:</b> şifre (yalnızca geri çözülemeyen şifrelenmiş biçimde saklanır; kimse göremez), oturum bilgileri, giriş tarihleri, teknik kayıtlar (IP adresi, tarayıcı bilgisi).</li>
 <li><b>Mesleki bilgiler:</b> görev yapılan okul, ilçe/il, okul müdürünün adı, branş, girilen dersler, ders programı.</li>
 <li><b>Hazırladığınız içerik:</b> sınavlar, sorular, ödevler, yıllık planlar, kulüp ve zümre belgeleri ile bunların içine yazdığınız bilgiler.</li>
@@ -714,6 +718,7 @@ const YASAL = { surum: '1.0', kvkk: `<h2>Kişisel Verilerin Korunması Aydınlat
 <li>Üyelik hesabınızı oluşturmak, e-posta adresinizi doğrulamak ve oturumunuzu yönetmek,</li>
 <li>Girdiğiniz bilgileri belgelere otomatik yazmak ve hazırladığınız içerikleri farklı cihazlardan erişebileceğiniz şekilde saklamak,</li>
 <li>Üyelik onayı, şifre yenileme ve hizmetle ilgili zorunlu bildirimleri e-postayla göndermek,</li>
+<li>Cep telefonu numaranızı paylaştıysanız, branş değişikliği ve destek talepleriniz gibi konularda size telefon veya WhatsApp üzerinden ulaşmak (numaranız başka hiçbir amaçla kullanılmaz; Bilgilerim'den istediğiniz zaman silebilirsiniz),</li>
 <li>Hizmetin güvenliğini sağlamak, kötüye kullanımı önlemek ve teknik sorunları gidermek,</li>
 <li>Yasal yükümlülükleri yerine getirmek ve yetkili kurumların taleplerini karşılamak.</li>
 </ul>
@@ -743,7 +748,7 @@ const YASAL = { surum: '1.0', kvkk: `<h2>Kişisel Verilerin Korunması Aydınlat
 
 <h3>9. Çerezler ve tarayıcı depolama</h3>
 <p>Site, reklam veya takip amaçlı çerez kullanmaz. Oturumunuzun açık kalması ve sitenin çalışması için yalnızca zorunlu olan bilgiler tarayıcınızın yerel depolama alanında tutulur. Girişte <b>Beni hatırla</b> seçeneğini işaretlerseniz e-posta adresiniz de bir sonraki girişte hazır gelmesi için yalnızca o cihazda saklanır. Kulüp fotoğrafları şimdilik yalnızca yüklendiği cihazda saklanır, sunucuya gönderilmez.</p>`, sozlesme: `<h2>Kullanıcı Sözleşmesi</h2>
-<p class="yt">Sürüm 1.0 · Yürürlük tarihi: 2 Kasım 2026</p>
+<p class="yt">Sürüm 1.0 · Yürürlük tarihi: 3 Kasım 2026</p>
 
 <h3>1. Taraflar ve konu</h3>
 <p>Bu sözleşme, <b>ogretmencantasi.com.tr</b> adresinde sunulan Öğretmen Çantası hizmetinin sağlayıcısı <b>Emre Sığındı</b> ("Hizmet Sağlayıcı") ile siteye üye olan kullanıcı ("Kullanıcı") arasında, hizmetin kullanım koşullarını belirlemek amacıyla düzenlenmiştir. Üye olurken bu sözleşmeyi onaylayan Kullanıcı, tüm maddeleri okuduğunu ve kabul ettiğini beyan eder.</p>
@@ -4081,12 +4086,33 @@ function viewHazirlaniyor(m, v) {
     h('div', { class: 'row' }, h('button', { class: 'btn pri', type: 'button', onclick: () => setView('kulup') }, 'Kulüpler'), h('button', { class: 'btn pri', type: 'button', onclick: () => setView('sok') }, 'ŞÖK tutanağı'), h('button', { class: 'btn', type: 'button', onclick: () => setView('bilgi') }, 'Bilgilerim')),
     h('p', { class: 'small muted', style: { margin: 0 } }, 'Branşınızla ilgili önerileriniz ya da örnek belgeleriniz varsa sol üstteki "Bize yazın" bağlantısından paylaşabilirsiniz.')));
 }
+function telNorm(t) { let d = String(t || '').replace(/\D/g, ''); if (d.startsWith('90')) d = d.slice(2); if (d.startsWith('0')) d = d.slice(1); return /^5\d{9}$/.test(d) ? d : null; }
+function telGoster(d) { return d ? `0${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 8)} ${d.slice(8)}` : ''; }
+function telKutu() {
+  const P = PROFIL || {}; const msj = h('span', { class: 'small' });
+  const inp = h('input', { type: 'tel', inputmode: 'tel', autocomplete: 'tel', placeholder: '05XX XXX XX XX', value: telGoster(P.telefon), style: { width: '12rem' } });
+  const kaydet = async () => {
+    const ham = inp.value.trim(); const d = ham ? telNorm(ham) : '';
+    if (d === null) { msj.textContent = 'Numarayı 05XX XXX XX XX biçiminde yazın.'; msj.style.color = '#b42318'; return; }
+    if ((P.telefon || '') === d) { msj.textContent = ''; return; }
+    btn.disabled = true; msj.textContent = 'Kaydediliyor…'; msj.style.color = '';
+    try {
+      const L = await sbRest('profiller?user_id=eq.' + encodeURIComponent(Auth.kullanici().id), { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ telefon: d || null, guncelleme: new Date().toISOString() }) });
+      if (L && L[0]) PROFIL = L[0]; inp.value = telGoster(d); msj.textContent = d ? 'Kaydedildi.' : 'Numaranız silindi.'; msj.style.color = '#1f7a4d';
+    } catch (e) { msj.textContent = /telefon/.test(e.message || '') ? 'Telefon kaydı henüz açılmadı; lütfen daha sonra deneyin.' : 'Kaydedilemedi: ' + (e.message || e); msj.style.color = '#b42318'; }
+    btn.disabled = false;
+  };
+  const btn = h('button', { class: 'btn', type: 'button', onclick: kaydet }, 'Kaydet');
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); kaydet(); } });
+  return h('div', { class: 'row', style: { gap: '6px', alignItems: 'center' } }, h('b', { style: { minWidth: '9rem' } }, 'Cep telefonu'), inp, btn, msj);
+}
 function profilKarti() {
   const P = PROFIL || {}; const okul = (P_OKUL.find(x => x[0] === P.okul_turu) || [, P.okul_turu || '—'])[1];
   const satir = (a, b) => h('div', { class: 'row', style: { gap: '6px' } }, h('b', { style: { minWidth: '9rem' } }, a), h('span', {}, b || '—'));
   return h('div', { class: 'card', style: { display: 'grid', gap: '6px', marginBottom: '16px' } },
-    h('h2', {}, 'Okul türü ve branş'),
+    h('h2', {}, 'Okul, branş ve iletişim'),
     satir('Okul türü', okul), satir('Branş', P.brans === P_ALAN_OGR ? `${P.alan || 'Meslek dersleri'} Alan Öğretmeni` + (P.dal ? (P.dal === 'Birden fazla dal' ? ' (birden fazla dal)' : ` (${P.dal} Dalı)`) : '') : P.brans), Array.isArray(P.dersler) && P.dersler.length ? satir('Dersleriniz', P.dersler.map(k => { const [sn, ad] = String(k).split('|'); return ad ? `${ad} (${sn === 'S' ? 'seçmeli' : sn + '. sınıf'})` : k; }).join(', ')) : null, satir('İl / ilçe', [P.il, P.ilce].filter(Boolean).join(' / ')),
+    telKutu(), h('p', { class: 'small muted', style: { margin: '0' } }, 'Cep telefonu isteğe bağlıdır; yalnızca branş değişikliği ve destek talepleriniz için size ulaşmakta kullanılır.'),
     h('p', { class: 'small muted', style: { margin: '4px 0 0' } }, 'Okul türü ve branş, hesap paylaşımını önlemek için öğretmen tarafından değiştirilemez. Değişiklik için ', h('a', { href: 'https://wa.me/905468463151?text=' + encodeURIComponent('Merhaba, Öğretmen Çantası hesabımda branş değişikliği istiyorum. E-postam: ' + ((Auth.kullanici() || {}).email || '')), target: '_blank', rel: 'noopener' }, 'bize yazın'), '.'));
 }
 function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgilerim
@@ -4106,6 +4132,7 @@ function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgi
 let YN = { liste: null, ara: '', tur: '', durum: '', sec: null, hata: '' };
 const ynTarih = t => t ? new Date(t).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 const ynOkul = k => (P_OKUL.find(x => x[0] === k) || [, k || '—'])[1];
+function ynWa(u, metin) { const d = telNorm(u.telefon); return d ? h('a', { class: 'btn yn-wa', href: 'https://wa.me/90' + d + '?text=' + encodeURIComponent(metin || ('Merhaba ' + ((u.ad || '').split(' ')[0] || '') + ' Hocam, Öğretmen Çantası\'ndan yazıyorum.')), target: '_blank', rel: 'noopener', onclick: e => e.stopPropagation() }, 'WhatsApp') : null; }
 function ynBrans(u) { if (!u.brans) return ''; return u.brans === P_ALAN_OGR ? `${u.alan || 'Meslek'}` + (u.dal ? ` · ${u.dal}` : '') : u.brans; }
 async function ynYukle() {
   YN.hata = '';
@@ -4113,7 +4140,7 @@ async function ynYukle() {
   catch (e) { YN.liste = null; YN.hata = e.message || String(e); }
 }
 function ynCsv() {
-  const sut = [['Ad', u => u.ad], ['E-posta', u => u.eposta], ['Okul türü', u => u.okul_turu ? ynOkul(u.okul_turu) : ''], ['Branş', u => u.brans === P_ALAN_OGR ? 'Alan öğretmeni' : u.brans], ['Alan', u => u.alan], ['Dal', u => u.dal], ['Okul', u => u.okul], ['İl', u => u.il], ['İlçe', u => u.ilce], ['Dersler', u => (u.dersler || []).map(k => String(k).split('|').pop()).join(', ')], ['Kayıt', u => ynTarih(u.kayit)], ['Son giriş', u => ynTarih(u.son_giris)], ['E-posta onaylı', u => u.onayli ? 'Evet' : 'Hayır']];
+  const sut = [['Ad', u => u.ad], ['E-posta', u => u.eposta], ['Telefon', u => telGoster(telNorm(u.telefon))], ['Okul türü', u => u.okul_turu ? ynOkul(u.okul_turu) : ''], ['Branş', u => u.brans === P_ALAN_OGR ? 'Alan öğretmeni' : u.brans], ['Alan', u => u.alan], ['Dal', u => u.dal], ['Okul', u => u.okul], ['İl', u => u.il], ['İlçe', u => u.ilce], ['Dersler', u => (u.dersler || []).map(k => String(k).split('|').pop()).join(', ')], ['Kayıt', u => ynTarih(u.kayit)], ['Son giriş', u => ynTarih(u.son_giris)], ['E-posta onaylı', u => u.onayli ? 'Evet' : 'Hayır']];
   const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
   const txt = '﻿' + [sut.map(s => q(s[0])).join(';')].concat((YN.liste || []).map(u => sut.map(s => q(s[1](u))).join(';'))).join('\r\n');
   const a = h('a', { href: URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' })), download: `uyeler_${new Date().toLocaleDateString('sv')}.csv` }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
@@ -4152,7 +4179,7 @@ function ynDuzenle(u, kapat) {
         if (u.user_id === (Auth.kullanici() || {}).id) { PROFIL = L[0]; profilUygula(); }
       } catch (e) { msj.innerHTML = ''; msj.append(h('div', { class: 'gmsj hata' }, 'Kaydedilemedi: ' + (e.message || e))); btn.disabled = false; btn.textContent = 'Değişikliği kaydet'; }
     } }, 'Değişikliği kaydet');
-    kutu.append(h('div', { class: 'row' }, btn, h('a', { class: 'btn', href: 'mailto:' + u.eposta }, 'E-posta gönder')), msj,
+    kutu.append(h('div', { class: 'row' }, btn, h('a', { class: 'btn', href: 'mailto:' + u.eposta }, 'E-posta gönder'), ynWa(u)), msj,
       h('p', { class: 'small muted', style: { margin: 0 } }, 'Branş değişikliğini öğretmen "Bize yazın" bağlantısından istediğinde buradan yapın. Öğretmen bu alanları kendisi değiştiremez.'));
   };
   ciz(); return kutu;
@@ -4179,18 +4206,18 @@ function viewYonetim(m) {
     ynDagilim('İl', say(u => u.il), 8)));
   // üye listesi
   const k = trKucuk(YN.ara.trim());
-  const F = L.filter(u => (!k || [u.ad, u.eposta, u.okul, u.il, u.ilce, u.brans, u.alan, u.dal].some(x => trKucuk(x || '').includes(k)))
-    && (!YN.tur || u.okul_turu === YN.tur) && (!YN.durum || (YN.durum === 'kurulumsuz' ? !u.okul_turu : YN.durum === 'onaysiz' ? !u.onayli : YN.durum === 'muhasebe' ? icerikVar(u) : true)));
+  const F = L.filter(u => (!k || [u.ad, u.eposta, u.telefon, u.okul, u.il, u.ilce, u.brans, u.alan, u.dal].some(x => trKucuk(x || '').includes(k)))
+    && (!YN.tur || u.okul_turu === YN.tur) && (!YN.durum || (YN.durum === 'kurulumsuz' ? !u.okul_turu : YN.durum === 'onaysiz' ? !u.onayli : YN.durum === 'telefonlu' ? !!telNorm(u.telefon) : YN.durum === 'muhasebe' ? icerikVar(u) : true)));
   const kart = h('div', { class: 'card', style: { display: 'grid', gap: '10px' } }, h('h2', {}, `Üyeler (${F.length}${F.length !== L.length ? ' / ' + L.length : ''})`));
   const ara = h('input', { type: 'search', placeholder: 'Ad, e-posta, okul, il veya branş ara', value: YN.ara, style: { width: 'min(26rem,100%)' }, oninput: e => { YN.ara = e.target.value; clearTimeout(ara._t); ara._t = setTimeout(() => { render(); const a = document.querySelector('#main input[type=search]'); if (a) { a.focus(); a.setSelectionRange(a.value.length, a.value.length); } }, 250); } });
   kart.append(h('div', { class: 'row yn-filtre' }, ara,
     h('select', { onchange: e => { YN.tur = e.target.value; render(); } }, [h('option', { value: '' }, 'Tüm okul türleri')].concat(P_OKUL.map(([v, t]) => h('option', { value: v, selected: v === YN.tur }, t)))),
-    h('select', { onchange: e => { YN.durum = e.target.value; render(); } }, [['', 'Tüm üyeler'], ['muhasebe', 'İçeriği hazır olanlar (Muhasebe)'], ['kurulumsuz', 'Kurulumu tamamlamayanlar'], ['onaysiz', 'E-postası onaylanmamış']].map(([v, t]) => h('option', { value: v, selected: v === YN.durum }, t)))));
+    h('select', { onchange: e => { YN.durum = e.target.value; render(); } }, [['', 'Tüm üyeler'], ['telefonlu', 'Telefonunu paylaşanlar'], ['muhasebe', 'İçeriği hazır olanlar (Muhasebe)'], ['kurulumsuz', 'Kurulumu tamamlamayanlar'], ['onaysiz', 'E-postası onaylanmamış']].map(([v, t]) => h('option', { value: v, selected: v === YN.durum }, t)))));
   const tablo = h('table', { class: 'yn-tablo' }, h('thead', {}, h('tr', {}, ['Öğretmen', 'Branş', 'Okul / il', 'Kayıt', 'Son giriş'].map(x => h('th', {}, x)))));
   const tb = h('tbody', {}); tablo.append(tb);
   F.slice(0, 500).forEach(u => {
     const tr = h('tr', { tabindex: 0, class: YN.sec === u.user_id ? 'sec' : '', onclick: () => { YN.sec = YN.sec === u.user_id ? null : u.user_id; render(); }, onkeydown: e => { if (e.key === 'Enter') tr.click(); } },
-      h('td', {}, h('b', {}, u.ad || '—'), h('div', { class: 'small muted' }, u.eposta, u.onayli ? '' : ' · onaysız')),
+      h('td', {}, h('b', {}, u.ad || '—'), h('div', { class: 'small muted' }, u.eposta, u.onayli ? '' : ' · onaysız'), telNorm(u.telefon) ? h('div', { class: 'yn-tel' }, h('span', { class: 'small' }, telGoster(telNorm(u.telefon))), ynWa(u)) : null),
       h('td', {}, u.okul_turu ? h('span', {}, ynBrans(u), h('div', { class: 'small muted' }, ynOkul(u.okul_turu))) : h('span', { class: 'yn-rozet' }, 'Kurulum yapılmadı')),
       h('td', {}, h('span', {}, u.okul || '—'), h('div', { class: 'small muted' }, [u.ilce, u.il].filter(Boolean).join(' / '))),
       h('td', { class: 'num' }, ynTarih(u.kayit)), h('td', { class: 'num' }, ynTarih(u.son_giris)));
