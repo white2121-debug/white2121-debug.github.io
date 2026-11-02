@@ -300,6 +300,41 @@ nav.tabs button.kilit::after{content:" 🔒";font-size:.8em;opacity:.85}
 .kr-sinif{font-weight:700;color:#0f6b5c;font-size:13px;margin:8px 0 2px;padding-top:6px;border-top:1px solid #e3e9e5}
 .kr-sinif:first-child{border-top:0;margin-top:0;padding-top:0}
 .kr-dal{display:inline-block;margin-left:6px;font-style:normal;font-size:11.5px;background:#eef5f2;color:#0f6b5c;border-radius:6px;padding:1px 6px}
+
+/* yönetim paneli */
+nav.tabs button[data-v="yonetim"]{--c:#b42318}
+body[data-v="yonetim"]{--sec:#b42318}
+.yn-sayilar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.yn-sayi{background:#fff;border:1px solid #e3e7e5;border-radius:12px;padding:14px 16px;display:grid;gap:2px}
+.yn-sayi b{font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums;color:#1d2a24}
+.yn-sayi span{font-size:13px;color:#5d6b64}
+.yn-izgara{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:16px}
+.yn-dag{display:grid;gap:10px;align-content:start;margin:0;min-width:0;overflow:hidden}
+.yn-filtre{flex-wrap:wrap}.yn-filtre select,.yn-filtre input{width:auto !important;flex:0 1 auto;max-width:100%}
+.yn-dag h2{margin:0}
+.yn-cubuklar{display:grid;gap:6px}
+.yn-cubuk{display:grid;grid-template-columns:minmax(0,9rem) 1fr 2.2rem;gap:8px;align-items:center;font-size:13.5px}
+.yn-ad{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yn-iz{background:#eef2f0;border-radius:6px;height:10px;overflow:hidden}
+.yn-iz i{display:block;height:100%;background:#b42318;border-radius:6px}
+.yn-cubuk b{text-align:right;font-variant-numeric:tabular-nums}
+.yn-hafta{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;align-items:end;height:130px;min-width:0}
+.yn-hs{display:grid;justify-items:center;gap:3px;align-content:end;font-size:11px;color:#5d6b64}
+.yn-hs b{font-size:12.5px;color:#1d2a24;font-variant-numeric:tabular-nums}
+.yn-hs i{display:block;width:70%;background:#b42318;border-radius:4px 4px 0 0;opacity:.85}
+.yn-hs span{white-space:nowrap}
+.yn-kay{overflow-x:auto}
+.yn-tablo{width:100%;border-collapse:collapse;font-size:14px}
+.yn-tablo th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#5d6b64;padding:8px 10px;border-bottom:2px solid #e3e7e5;white-space:nowrap}
+.yn-tablo td{padding:9px 10px;border-bottom:1px solid #eef1ef;vertical-align:top}
+.yn-tablo td.num{white-space:nowrap;font-variant-numeric:tabular-nums}
+.yn-tablo tbody tr[tabindex]{cursor:pointer}
+.yn-tablo tbody tr[tabindex]:hover,.yn-tablo tbody tr.sec{background:#fbf1f0}
+.yn-tablo tr.yn-acik td{background:#fffaf9;border-bottom:2px solid #f0d5d1}
+.yn-rozet{display:inline-block;background:#fdecea;color:#b42318;border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:600}
+.yn-duzen{display:grid;gap:10px;padding:6px 2px}
+.yn-alanlar{display:flex;flex-wrap:wrap;gap:10px}
+.yn-alanlar select{max-width:22rem}
 </style>
 </head>
 <body>
@@ -4027,6 +4062,7 @@ function kurulumEkrani(ad) {
 }
 function profilUygula(ilk) {
   const b = document.getElementById('bransAd'); if (b) b.textContent = bransMetni() || 'Branş seçilmedi';
+  const nav = document.querySelector('nav.tabs'); if (YONETICI && nav && !nav.querySelector('[data-v=yonetim]')) { const yb = h('button', { type: 'button', 'data-v': 'yonetim' }, 'Yönetim'); yb.addEventListener('click', () => setView('yonetim')); nav.append(yb); if (VIEW === 'yonetim') yb.setAttribute('aria-current', 'page'); }
   document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('kilit', ICERIKLI_SEKME.includes(x.dataset.v) && !icerikVar()));
   if (!PROFIL) return; let deg = false; const st = S.settings;
   if (ilk) { // kurulumda girilen okul bilgilerini belgelerde kullanılacak ayarlara aktar
@@ -4061,6 +4097,110 @@ function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgi
   m.append(h('div', { class: 'card', style: { display: 'grid', gap: '10px' } }, h('h2', {}, 'Kimlik ve okul'),
     h('div', { class: 'row' }, inp('Adınız soyadınız', 'ben', 'Ad SOYAD', '16rem'), inp('Okul adı', 'okul'), inp('Okul müdürü', 'mudur', 'Ad SOYAD', '14rem'), inp('İlçe / il', 'ilce', 'BAKIRKÖY / İSTANBUL', '14rem'))));
   m.append(hesapSilKart());
+}
+
+
+/* ===================== YÖNETİM PANELİ (yalnızca yöneticiler) =====================
+   Veriler sunucudaki yonetim_uyeler() fonksiyonundan gelir; fonksiyon yönetici olmayanlara hata döndürür.
+   Branş düzeltmeleri profiller tablosuna yazılır; RLS ve profil_kilit tetikleyicisi yalnızca yöneticiye izin verir. */
+let YN = { liste: null, ara: '', tur: '', durum: '', sec: null, hata: '' };
+const ynTarih = t => t ? new Date(t).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+const ynOkul = k => (P_OKUL.find(x => x[0] === k) || [, k || '—'])[1];
+function ynBrans(u) { if (!u.brans) return ''; return u.brans === P_ALAN_OGR ? `${u.alan || 'Meslek'}` + (u.dal ? ` · ${u.dal}` : '') : u.brans; }
+async function ynYukle() {
+  YN.hata = '';
+  try { YN.liste = await sbRest('rpc/yonetim_uyeler', { method: 'POST', body: '{}' }) || []; }
+  catch (e) { YN.liste = null; YN.hata = e.message || String(e); }
+}
+function ynCsv() {
+  const sut = [['Ad', u => u.ad], ['E-posta', u => u.eposta], ['Okul türü', u => u.okul_turu ? ynOkul(u.okul_turu) : ''], ['Branş', u => u.brans === P_ALAN_OGR ? 'Alan öğretmeni' : u.brans], ['Alan', u => u.alan], ['Dal', u => u.dal], ['Okul', u => u.okul], ['İl', u => u.il], ['İlçe', u => u.ilce], ['Dersler', u => (u.dersler || []).map(k => String(k).split('|').pop()).join(', ')], ['Kayıt', u => ynTarih(u.kayit)], ['Son giriş', u => ynTarih(u.son_giris)], ['E-posta onaylı', u => u.onayli ? 'Evet' : 'Hayır']];
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const txt = '﻿' + [sut.map(s => q(s[0])).join(';')].concat((YN.liste || []).map(u => sut.map(s => q(s[1](u))).join(';'))).join('\r\n');
+  const a = h('a', { href: URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' })), download: `uyeler_${new Date().toLocaleDateString('sv')}.csv` }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function ynDagilim(baslik, sayac, ust = 8) {
+  const L = Object.entries(sayac).sort((a, b) => b[1] - a[1]); const max = L.length ? L[0][1] : 1; const kalan = L.slice(ust).reduce((n, x) => n + x[1], 0);
+  return h('div', { class: 'card yn-dag' }, h('h2', {}, baslik), L.length ? h('div', { class: 'yn-cubuklar' }, L.slice(0, ust).map(([k, n]) => h('div', { class: 'yn-cubuk' }, h('span', { class: 'yn-ad', title: k }, k), h('span', { class: 'yn-iz' }, h('i', { style: { width: Math.max(4, n / max * 100) + '%' } })), h('b', {}, String(n)))), kalan ? h('div', { class: 'small muted' }, `Diğerleri: ${kalan}`) : null) : h('p', { class: 'small muted' }, 'Henüz veri yok.'));
+}
+function ynDuzenle(u, kapat) {
+  const D = { okul_turu: u.okul_turu || '', brans: u.brans || '', alan: u.alan || '', dal: u.dal || '' };
+  const kutu = h('div', { class: 'yn-duzen' });
+  const ciz = () => {
+    kutu.innerHTML = '';
+    const sec = (ad, deger, L, fn, bos) => h('select', { onchange: e => { fn(e.target.value); ciz(); } }, [h('option', { value: '' }, bos)].concat(L.map(s => { const [v, t] = Array.isArray(s) ? s : [s, s]; return h('option', { value: v, selected: v === deger }, t); })).concat(deger && !L.some(s => (Array.isArray(s) ? s[0] : s) === deger) ? [h('option', { value: deger, selected: true }, deger + ' (mevcut)')] : []));
+    const meslek = P_MESLEK_OKUL.includes(D.okul_turu) && D.brans === P_ALAN_OGR; const A = meslek && MEB_ALAN[D.alan];
+    kutu.append(h('div', { class: 'row', style: { justifyContent: 'space-between', alignItems: 'baseline' } }, h('h2', { style: { margin: 0 } }, u.ad || u.eposta), h('button', { class: 'btn', type: 'button', onclick: kapat }, 'Kapat')),
+      h('p', { class: 'small muted', style: { margin: 0 } }, `${u.eposta} · kayıt ${ynTarih(u.kayit)} · son giriş ${ynTarih(u.son_giris)}${u.onayli ? '' : ' · e-posta onaylanmamış'}`));
+    if (!u.okul_turu) { kutu.append(h('p', { class: 'gmsj ok' }, 'Bu üye kurulum ekranını henüz tamamlamamış. İlk girişinde okul türü ve branşını kendisi seçecek.')); return; }
+    kutu.append(h('div', { class: 'yn-alanlar' },
+      field('Okul türü', sec('okul_turu', D.okul_turu, P_OKUL, v => { D.okul_turu = v; }, 'Seçin…')),
+      field('Branş', sec('brans', D.brans, P_BRANS[D.okul_turu] || [], v => { D.brans = v; if (v !== P_ALAN_OGR) { D.alan = ''; D.dal = ''; } }, 'Seçin…')),
+      meslek ? field('Alan', sec('alan', D.alan, P_ALANLAR, v => { D.alan = v; D.dal = ''; }, 'Seçin…')) : null,
+      A && A[1].length > 1 ? field('Dal', sec('dal', D.dal, A[1].concat(['Birden fazla dal']), v => { D.dal = v; }, 'Seçilmedi')) : null));
+    const ders = (u.dersler || []).map(k => { const [s, ad] = String(k).split('|'); return ad ? `${ad} (${s === 'S' ? 'seçmeli' : s + '. sınıf'})` : k; });
+    kutu.append(h('p', { class: 'small', style: { margin: 0 } }, h('b', {}, 'Okul: '), [u.okul, [u.ilce, u.il].filter(Boolean).join(' / ')].filter(Boolean).join(' · ') || '—'), h('p', { class: 'small', style: { margin: 0 } }, h('b', {}, 'Dersleri: '), ders.join(', ') || '—'));
+    const msj = h('div', {});
+    const btn = h('button', { class: 'btn pri', type: 'button', onclick: async () => {
+      if (!D.okul_turu || !D.brans || (meslek && !D.alan)) { msj.innerHTML = ''; msj.append(h('div', { class: 'gmsj hata' }, 'Okul türü, branş' + (meslek ? ' ve alan' : '') + ' boş bırakılamaz.')); return; }
+      btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+      const yeni = { okul_turu: D.okul_turu, brans: D.brans, alan: meslek ? D.alan : null, dal: A ? (D.dal || null) : null, guncelleme: new Date().toISOString() };
+      try {
+        let L; try { L = await sbRest('profiller?user_id=eq.' + encodeURIComponent(u.user_id), { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(yeni) }); }
+        catch (e1) { if (!/dal/.test(e1.message || '')) throw e1; delete yeni.dal; L = await sbRest('profiller?user_id=eq.' + encodeURIComponent(u.user_id), { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(yeni) }); }
+        if (!L || !L.length) throw new Error('Kayıt güncellenemedi (yetki yok ya da üye bulunamadı).');
+        Object.assign(u, yeni); toast('Branş bilgisi güncellendi. Öğretmen sayfayı yenileyince geçerli olur.'); kapat();
+        if (u.user_id === (Auth.kullanici() || {}).id) { PROFIL = L[0]; profilUygula(); }
+      } catch (e) { msj.innerHTML = ''; msj.append(h('div', { class: 'gmsj hata' }, 'Kaydedilemedi: ' + (e.message || e))); btn.disabled = false; btn.textContent = 'Değişikliği kaydet'; }
+    } }, 'Değişikliği kaydet');
+    kutu.append(h('div', { class: 'row' }, btn, h('a', { class: 'btn', href: 'mailto:' + u.eposta }, 'E-posta gönder')), msj,
+      h('p', { class: 'small muted', style: { margin: 0 } }, 'Branş değişikliğini öğretmen "Bize yazın" bağlantısından istediğinde buradan yapın. Öğretmen bu alanları kendisi değiştiremez.'));
+  };
+  ciz(); return kutu;
+}
+function viewYonetim(m) {
+  if (!YONETICI) { m.append(h('h1', {}, 'Yönetim'), h('p', {}, 'Bu bölüme erişim yetkiniz yok.')); return; }
+  m.append(h('div', { class: 'row', style: { justifyContent: 'space-between', alignItems: 'center' } }, h('h1', {}, 'Yönetim'),
+    h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: async () => { YN.liste = null; render(); await ynYukle(); render(); } }, 'Yenile'), h('button', { class: 'btn', type: 'button', disabled: !YN.liste || !YN.liste.length, onclick: ynCsv }, 'Excel için indir (CSV)'))));
+  if (YN.liste === null && !YN.hata) { m.append(h('p', { class: 'muted' }, 'Üyeler yükleniyor…')); ynYukle().then(render); return; }
+  if (YN.hata) { m.append(h('div', { class: 'card' }, h('p', { class: 'gmsj hata' }, 'Üye listesi alınamadı: ' + YN.hata), h('p', { class: 'small muted' }, 'Supabase\'te yonetim_uyeler fonksiyonunun güncel sürümünün çalıştırıldığını kontrol edin.'))); YN.hata = ''; return; }
+  const L = YN.liste; const simdi = Date.now(), gun = 864e5;
+  const kur = L.filter(u => u.okul_turu);
+  m.append(h('div', { class: 'yn-sayilar' },
+    [['Toplam üye', L.length], ['Kurulumu tamamlayan', kur.length], ['Son 7 günde katılan', L.filter(u => simdi - new Date(u.kayit) < 7 * gun).length], ['Son 7 günde giriş yapan', L.filter(u => u.son_giris && simdi - new Date(u.son_giris) < 7 * gun).length], ['E-postası onaylanmamış', L.filter(u => !u.onayli).length]]
+      .map(([a, n]) => h('div', { class: 'yn-sayi' }, h('b', {}, String(n)), h('span', {}, a)))));
+  // haftalık kayıt grafiği (son 8 hafta)
+  const haftalar = Array.from({ length: 8 }, (_, i) => { const bit = simdi - i * 7 * gun, bas = bit - 7 * gun; return { n: L.filter(u => { const t = +new Date(u.kayit); return t > bas && t <= bit; }).length, etiket: i === 0 ? 'bu hf' : '−' + i }; }).reverse();
+  const hmax = Math.max(1, ...haftalar.map(x => x.n));
+  const say = f => kur.reduce((o, u) => { const k = f(u); if (k) o[k] = (o[k] || 0) + 1; return o; }, {});
+  m.append(h('div', { class: 'yn-izgara' },
+    h('div', { class: 'card yn-dag' }, h('h2', {}, 'Haftalık yeni üye'), h('div', { class: 'small muted', style: { marginTop: '-4px' } }, 'Son 8 hafta, haftaya göre'), h('div', { class: 'yn-hafta' }, haftalar.map(x => h('div', { class: 'yn-hs' }, h('b', {}, String(x.n)), h('i', { style: { height: Math.max(3, x.n / hmax * 90) + 'px' } }), h('span', {}, x.etiket))))),
+    ynDagilim('Branş / alan', say(u => u.brans === P_ALAN_OGR ? (u.alan || 'Alan belirtilmemiş') : u.brans)),
+    ynDagilim('Okul türü', say(u => ynOkul(u.okul_turu)), 6),
+    ynDagilim('İl', say(u => u.il), 8)));
+  // üye listesi
+  const k = trKucuk(YN.ara.trim());
+  const F = L.filter(u => (!k || [u.ad, u.eposta, u.okul, u.il, u.ilce, u.brans, u.alan, u.dal].some(x => trKucuk(x || '').includes(k)))
+    && (!YN.tur || u.okul_turu === YN.tur) && (!YN.durum || (YN.durum === 'kurulumsuz' ? !u.okul_turu : YN.durum === 'onaysiz' ? !u.onayli : YN.durum === 'muhasebe' ? icerikVar(u) : true)));
+  const kart = h('div', { class: 'card', style: { display: 'grid', gap: '10px' } }, h('h2', {}, `Üyeler (${F.length}${F.length !== L.length ? ' / ' + L.length : ''})`));
+  const ara = h('input', { type: 'search', placeholder: 'Ad, e-posta, okul, il veya branş ara', value: YN.ara, style: { width: 'min(26rem,100%)' }, oninput: e => { YN.ara = e.target.value; clearTimeout(ara._t); ara._t = setTimeout(() => { render(); const a = document.querySelector('#main input[type=search]'); if (a) { a.focus(); a.setSelectionRange(a.value.length, a.value.length); } }, 250); } });
+  kart.append(h('div', { class: 'row yn-filtre' }, ara,
+    h('select', { onchange: e => { YN.tur = e.target.value; render(); } }, [h('option', { value: '' }, 'Tüm okul türleri')].concat(P_OKUL.map(([v, t]) => h('option', { value: v, selected: v === YN.tur }, t)))),
+    h('select', { onchange: e => { YN.durum = e.target.value; render(); } }, [['', 'Tüm üyeler'], ['muhasebe', 'İçeriği hazır olanlar (Muhasebe)'], ['kurulumsuz', 'Kurulumu tamamlamayanlar'], ['onaysiz', 'E-postası onaylanmamış']].map(([v, t]) => h('option', { value: v, selected: v === YN.durum }, t)))));
+  const tablo = h('table', { class: 'yn-tablo' }, h('thead', {}, h('tr', {}, ['Öğretmen', 'Branş', 'Okul / il', 'Kayıt', 'Son giriş'].map(x => h('th', {}, x)))));
+  const tb = h('tbody', {}); tablo.append(tb);
+  F.slice(0, 500).forEach(u => {
+    const tr = h('tr', { tabindex: 0, class: YN.sec === u.user_id ? 'sec' : '', onclick: () => { YN.sec = YN.sec === u.user_id ? null : u.user_id; render(); }, onkeydown: e => { if (e.key === 'Enter') tr.click(); } },
+      h('td', {}, h('b', {}, u.ad || '—'), h('div', { class: 'small muted' }, u.eposta, u.onayli ? '' : ' · onaysız')),
+      h('td', {}, u.okul_turu ? h('span', {}, ynBrans(u), h('div', { class: 'small muted' }, ynOkul(u.okul_turu))) : h('span', { class: 'yn-rozet' }, 'Kurulum yapılmadı')),
+      h('td', {}, h('span', {}, u.okul || '—'), h('div', { class: 'small muted' }, [u.ilce, u.il].filter(Boolean).join(' / '))),
+      h('td', { class: 'num' }, ynTarih(u.kayit)), h('td', { class: 'num' }, ynTarih(u.son_giris)));
+    tb.append(tr);
+    if (YN.sec === u.user_id) tb.append(h('tr', { class: 'yn-acik' }, h('td', { colspan: 5 }, ynDuzenle(u, () => { YN.sec = null; render(); }))));
+  });
+  if (!F.length) tb.append(h('tr', {}, h('td', { colspan: 5, class: 'muted' }, 'Eşleşen üye yok.')));
+  kart.append(h('div', { class: 'yn-kay' }, tablo));
+  if (F.length > 500) kart.append(h('p', { class: 'small muted' }, 'İlk 500 üye gösteriliyor; aramayı daraltın.'));
+  m.append(kart);
 }
 
 /* Koordinatörlük (sitede kullanılmıyor) */
@@ -4947,7 +5087,7 @@ let VIEW = 'sinav';
 const W = { tur: 'donem', prog: 'orgun', bep: false, uygulama: false, yazilim: '', ders: '', sinif: 9, donem: 1, sinavNo: 1, ay: 'Şubat', tarih: '', saat: '10:00', sure: 40, units: [], counts: {}, z: [30, 50, 20], excludeUsed: true, grupSayisi: 2, ogretmenler: [], ikiSutun: false, sinifKod: '', puanMode: 'zorluk', items: [], warnings: [], seed: 1, aciklama: '', not: '' };
 
 function setView(v) { VIEW = v; $$('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.v === v ? 'page' : 'false')); render(); window.scrollTo(0, 0); }
-function render() { const m = $('#main'); m.innerHTML = ''; document.body.dataset.v = VIEW; if (ICERIKLI_SEKME.includes(VIEW) && !icerikVar()) { viewHazirlaniyor(m, VIEW); return; } if ((VIEW === 'bilgi' || VIEW === 'ayar' || VIEW === 'staj' || VIEW === 'koor') && !icerikVar()) { viewBilgiSade(m); return; } ({ bilgi: viewBilgi, sinav: viewSinav, banka: viewBanka, odev: viewOdev, gecmis: viewGecmis, staj: viewBilgi, koor: viewBilgi, plan: viewPlan, kulup: viewKulup, zumre: viewZumre, sok: viewSok, ayar: viewBilgi }[VIEW])(m); }
+function render() { const m = $('#main'); m.innerHTML = ''; document.body.dataset.v = VIEW; if (ICERIKLI_SEKME.includes(VIEW) && !icerikVar()) { viewHazirlaniyor(m, VIEW); return; } if ((VIEW === 'bilgi' || VIEW === 'ayar' || VIEW === 'staj' || VIEW === 'koor') && !icerikVar()) { viewBilgiSade(m); return; } ({ bilgi: viewBilgi, sinav: viewSinav, banka: viewBanka, odev: viewOdev, gecmis: viewGecmis, staj: viewBilgi, koor: viewBilgi, plan: viewPlan, kulup: viewKulup, zumre: viewZumre, sok: viewSok, yonetim: viewYonetim, ayar: viewBilgi }[VIEW])(m); }
 
 /* ===================== SINAV HAZIRLA ===================== */
 function seg(options, value, onpick) { return h('div', { class: 'seg', role: 'group' }, options.map(([v, t]) => h('button', { type: 'button', 'aria-pressed': String(v === value), onclick: () => onpick(v) }, t))); }
@@ -5367,10 +5507,10 @@ async function boot() {
   await loadState(); applyTheme();
   $$('nav.tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.v)));
   W.sure = S.settings.sure; resetZ();
-  const hv = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'staj', 'koor', 'plan', 'kulup', 'zumre', 'sok', 'ayar'].includes(hv)) VIEW = hv;
+  const hv = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'staj', 'koor', 'plan', 'kulup', 'zumre', 'sok', 'ayar'].includes(hv) || (hv === 'yonetim' && YONETICI)) VIEW = hv;
   const yb = document.getElementById('yedekBtn'); if (yb) yb.addEventListener('click', () => { setView('bilgi'); setTimeout(() => { const y = document.getElementById('yedek'); if (y) y.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); });
   if (!location.hash && !S.settings.ben) VIEW = 'bilgi';
-  window.addEventListener('hashchange', () => { const v = (location.hash || '').slice(1); if (['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'plan', 'kulup', 'zumre', 'sok'].includes(v) && v !== VIEW) setView(v); });
+  window.addEventListener('hashchange', () => { const v = (location.hash || '').slice(1); if ((['bilgi', 'sinav', 'banka', 'odev', 'gecmis', 'plan', 'kulup', 'zumre', 'sok'].includes(v) || (v === 'yonetim' && YONETICI)) && v !== VIEW) setView(v); });
   setView(VIEW); setSync(Store.isCloud() ? 'ok' : 'err'); yRozet(); yUyari();
   if (false) connectCloud().then(async ok => { if (ok) { applyTheme(); setView(VIEW); yRozet(); } await yAcilis(); }).catch(() => { setSync('err'); yAcilis(); });
   else yAcilis();
