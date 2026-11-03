@@ -7,11 +7,12 @@
 <meta name="theme-color" content="#0f6b5c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Sınav">
+<meta name="apple-mobile-web-app-title" content="Öğr. Çantası">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230f6b5c'/><rect x='17' y='12' width='30' height='40' rx='3' fill='white'/><path d='M23 22h18M23 29h18M23 36h12' stroke='%230f6b5c' stroke-width='3' stroke-linecap='round'/><circle cx='42' cy='44' r='7' fill='%23f2b43c'/></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230f6b5c'/%3E%3Cpath d='M196 150v-22a28 28 0 0 1 28-28h64a28 28 0 0 1 28 28v22' fill='none' stroke='%23fff' stroke-width='30' stroke-linejoin='round'/%3E%3Crect x='100' y='150' width='312' height='236' rx='34' fill='%23fff'/%3E%3Cpath d='M100 236c52 26 104 38 156 38s104-12 156-38' fill='none' stroke='%230f6b5c' stroke-width='16'/%3E%3Crect x='226' y='248' width='60' height='52' rx='12' fill='%23f2b43c'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="icon-180.png">
+<meta name="description" content="Öğretmenler için sınav, yıllık plan, kulüp, zümre ve ŞÖK araçları. Hazırladıklarınız hesabınızda saklanır.">
 <style>/* Yerleşim: üstte sekme çubuğu, altında tek sütun çalışma alanı; geniş ekranda sihirbaz + önizleme yan yana. */
 :root{
   --paper:#f6f7f4; --card:#ffffff; --ink:#1d2a2b; --muted:#5f6d6c; --line:#d9dfdb; --soft:#eef2ef;
@@ -358,6 +359,32 @@ a.yn-d:focus-visible,button.yn-d:focus-visible{outline:2px solid #1d2a24;outline
 .yn-kopya:hover{background:#eef2f0;color:#1d2a24}
 .yn-kopya.ok{color:#1f7a4d}
 .yn-kopya:focus-visible{outline:2px solid #1d2a24;outline-offset:1px}
+
+/* giriş ekranı tanıtımı */
+#giris.gk-genis{align-items:flex-start;padding:40px 16px}
+.gk-sayfa{width:100%;max-width:1120px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:48px;align-items:start}
+.gk-sayfa .gk-kutu{grid-column:2;grid-row:1;position:sticky;top:40px}
+.gk-tanitim{grid-column:1;grid-row:1;color:#e9f4ef;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:grid;gap:14px;padding-top:6px}
+.gt-ust{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a8dcc9}
+.gk-tanitim h1{margin:0;font:700 clamp(26px,3.2vw,38px)/1.15 Georgia,"Times New Roman",serif;color:#fff;text-wrap:balance;max-width:22ch}
+.gt-giris{margin:0;max-width:60ch;color:#d6ebe3}
+.gt-liste{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gt-liste li{align-content:start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-left:4px solid var(--c);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.gt-liste li::before{content:none}
+.gt-liste b{color:#fff;font-size:15px}
+.gt-liste span{font-size:13.5px;color:#cfe5dc}
+.gt-liste li{border-left-color:color-mix(in srgb,var(--c) 55%,#fff)}
+.gt-not{margin:4px 0 0;font-size:13.5px;color:#d6ebe3;background:rgba(0,0,0,.14);border-radius:10px;padding:10px 12px;max-width:68ch}
+.gt-not b{color:#fff}
+.gk-neler{display:none;font-size:13.5px;color:#0f6b5c;margin:-8px 0 14px}
+@media (max-width:900px){
+  #giris.gk-genis{padding:20px 16px 32px}
+  .gk-sayfa{grid-template-columns:1fr;gap:28px;max-width:480px}
+  .gk-sayfa .gk-kutu{grid-column:1;grid-row:1;position:static}
+  .gk-tanitim{grid-row:2;padding-top:0}
+  .gt-liste{grid-template-columns:1fr}
+  .gk-neler{display:inline-block}
+}
 </style>
 </head>
 <body>
@@ -866,6 +893,22 @@ const Auth = (() => {
   }
 
   /* ---------- giriş ekranı ---------- */
+  const TANITIM = `<section class="gk-tanitim" aria-labelledby="gkBaslik">
+    <p class="gt-ust">Öğretmenler için dijital çanta</p>
+    <h1 id="gkBaslik">Sınav kâğıdından zümre tutanağına, evrak işleriniz tek yerde</h1>
+    <p class="gt-giris">Bilgilerinizi bir kez girin; sınav kâğıdı, yıllık plan, kulüp dosyası ve tutanaklar adınız, okulunuz ve müdürünüzle hazır gelsin. Hazırladığınız her şey hesabınızda saklanır; telefondan da bilgisayardan da aynı yerden devam edersiniz.</p>
+    <ul class="gt-liste">
+      <li style="--c:#0f6b5c"><b>Sınav hazırla</b><span>Ünite ve zorluğa göre soru seçin; sınav kâğıdı ve ayrı sayfada cevap anahtarı yazdırmaya hazır.</span></li>
+      <li style="--c:#1d5f8c"><b>Soru bankası</b><span>Hazır soruları süzün, düzenleyin, kendi sorularınızı ekleyin.</span></li>
+      <li style="--c:#2f7a36"><b>Yıllık planlar</b><span>Maarif Modeli programlarına göre, çalışma takvimine yerleşen planlar. Word ve Excel.</span></li>
+      <li style="--c:#6a4a9c"><b>Ödevler</b><span>Performans ve proje ödevi konuları, değerlendirme formları. Word.</span></li>
+      <li style="--c:#a63f74"><b>Kulüpler</b><span>48 öğrenci kulübü için kulüp dosyası, haftalık takvim ve yıllık plan.</span></li>
+      <li style="--c:#2d6d7f"><b>Zümreler</b><span>Okul, ilçe ve il zümre toplantı tutanakları.</span></li>
+      <li style="--c:#8fa3b8"><b>Bilgilerim</b><span>Adınız, okulunuz, müdürünüz ve ders programınız bir kez girilir; bütün belgelere kendiliğinden yazılır.</span></li>
+      <li style="--c:#9a5b13"><b>ŞÖK tutanağı</b><span>Şube öğretmenler kurulu tutanağı; öğretmen listesi, ders ortalamaları ve sınıf mevcuduyla.</span></li>
+    </ul>
+    <p class="gt-not"><b>Branşlar:</b> Muhasebe ve Finansman alanının soru bankası, yıllık plan ve zümre içerikleri hazır. Diğer branşlardaki öğretmenler Kulüpler ve ŞÖK'ü hemen kullanabilir; branş içerikleri hazırlanıyor. Üyelik şimdilik ücretsiz.</p>
+  </section>`;
   let sonEposta = '';
   function ekran(mod, mesaj, tur) {
     let el = document.getElementById('giris'); if (!el) { el = document.createElement('div'); el.id = 'giris'; document.body.appendChild(el); }
@@ -877,8 +920,10 @@ const Auth = (() => {
     if (mod === 'kayit') form = `<form data-f="kayit"><label>Ad soyad<input type="text" name="a" autocomplete="name" required placeholder="Belgelerde bu ad kullanılır"></label><label>E-posta<input type="email" name="e" autocomplete="email" required></label><label>Şifre (en az 6 karakter)<input type="password" name="p" autocomplete="new-password" minlength="6" required></label><label class="gonay"><input type="checkbox" name="s" required><span><a href="#" data-metin="sozlesme">Kullanıcı Sözleşmesi</a>'ni okudum ve kabul ediyorum. Kişisel verilerimin <a href="#" data-metin="kvkk">KVKK Aydınlatma Metni</a> kapsamında işleneceği konusunda bilgilendirildim.</span></label><button class="gb" type="submit">Üye ol</button><p class="gk">Üye olduktan sonra e-posta adresinize bir onay bağlantısı gelir. Bağlantıya tıklayınca hesabınız açılır.</p></form>`;
     if (mod === 'sifre') form = `<form data-f="sifre"><p class="gk" style="margin-top:0">E-posta adresinizi yazın; şifrenizi yenilemeniz için bir bağlantı gönderelim.</p><label>E-posta<input type="email" name="e" autocomplete="email" required></label><button class="gb" type="submit">Bağlantıyı gönder</button><a href="#" data-m="giris" class="gl">Girişe dön</a></form>`;
     if (mod === 'yeni') form = `<form data-f="yeni"><p class="gk" style="margin-top:0">Hesabınız için yeni bir şifre belirleyin.</p><label>Yeni şifre (en az 6 karakter)<input type="password" name="p" autocomplete="new-password" minlength="6" required></label><button class="gb" type="submit">Şifreyi kaydet</button></form>`;
-    el.innerHTML = `<div class="gk-kutu"><div class="gk-marka"><b>Öğretmen Çantası</b><span>Öğretmenler için sınav, yıllık plan, kulüp ve zümre araçları</span></div>
-      ${mod === 'giris' || mod === 'kayit' ? `<div class="gsekme">${sekme('giris', 'Giriş yap')}${sekme('kayit', 'Üye ol')}</div>` : ''}${msj}${form}<div class="gyasal"><a href="#" data-metin="kvkk">KVKK Aydınlatma Metni</a> · <a href="#" data-metin="sozlesme">Kullanıcı Sözleşmesi</a></div></div>`;
+    const tanitimli = mod === 'giris' || mod === 'kayit';
+    el.classList.toggle('gk-genis', tanitimli);
+    el.innerHTML = (tanitimli ? `<div class="gk-sayfa">` : '') + `<div class="gk-kutu"><div class="gk-marka"><b>Öğretmen Çantası</b><span>Öğretmenler için sınav, yıllık plan, kulüp ve zümre araçları</span></div>
+      ${tanitimli ? `<a href="#gkBaslik" class="gk-neler" onclick="event.preventDefault();document.getElementById('gkBaslik').scrollIntoView({behavior:'smooth'})">Öğretmen Çantası'nda neler var? ↓</a>` : ''}${mod === 'giris' || mod === 'kayit' ? `<div class="gsekme">${sekme('giris', 'Giriş yap')}${sekme('kayit', 'Üye ol')}</div>` : ''}${msj}${form}<div class="gyasal"><a href="#" data-metin="kvkk">KVKK Aydınlatma Metni</a> · <a href="#" data-metin="sozlesme">Kullanıcı Sözleşmesi</a></div></div>` + (tanitimli ? TANITIM + '</div>' : '');
     el.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); ekran(b.dataset.m); }));
     const f = el.querySelector('form'); const ep = f.querySelector('input[name=e]'); if (ep) ep.value = sonEposta || (mod === 'giris' || mod === 'sifre' ? kayitliEposta() : '');
     const ilk = [...f.querySelectorAll('input')].find(x => !x.value); if (ilk) setTimeout(() => ilk.focus(), 30);
@@ -914,7 +959,7 @@ const Auth = (() => {
     devam = fn;
     if (location.hash === '#silindi') {
       history.replaceState(null, '', site()); temizle(); try { localStorage.removeItem(EP); localStorage.removeItem(HT); } catch (e) { }
-      try { Object.keys(localStorage).filter(k => k.startsWith('sh_')).forEach(k => localStorage.removeItem(k)); } catch (e) { }
+      try { Object.keys(localStorage).filter(k => k.startsWith('sh_') || k === 'kf_uid').forEach(k => localStorage.removeItem(k)); } catch (e) { }
       ['sinav-hazirlama', 'kulupFoto'].forEach(ad => { try {
         const r = indexedDB.open(ad);
         r.onupgradeneeded = () => { try { r.transaction.abort(); } catch (e) { } }; // yoksa oluşturma
@@ -2603,7 +2648,7 @@ const KF_JS = `(function(){
 var MEM={},DB=null,PRE={};try{PRE=JSON.parse(document.getElementById('foto-data').textContent)||{}}catch(e){}
 function ac(){return new Promise(function(r){try{var q=indexedDB.open('kulupFoto',1);q.onupgradeneeded=function(){q.result.createObjectStore('f')};q.onsuccess=function(){DB=q.result;r()};q.onerror=function(){r()}}catch(e){r()}})}
 function al(k){return new Promise(function(r){if(!DB)return r(MEM[k]);try{var q=DB.transaction('f').objectStore('f').get(k);q.onsuccess=function(){r(q.result||MEM[k])};q.onerror=function(){r(MEM[k])}}catch(e){r(MEM[k])}})}
-function yaz(k,v){if(v)MEM[k]=v;else delete MEM[k];if(!DB)return;try{var s=DB.transaction('f','readwrite').objectStore('f');if(v)s.put(v,k);else s.delete(k)}catch(e){}}
+function yaz(k,v){if(v)MEM[k]=v;else delete MEM[k];try{if(window.parent!==window&&window.parent.kfBuluta)window.parent.kfBuluta(k,v||null)}catch(e){}if(!DB)return;try{var s=DB.transaction('f','readwrite').objectStore('f');if(v)s.put(v,k);else s.delete(k)}catch(e){}}
 var kutular=[].slice.call(document.querySelectorAll('.foto,.pst .ico')),secili=null,baslik=document.title;
 function kucult(dosya,cb){var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var M=1600,w=im.width,h=im.height,o=Math.min(1,M/Math.max(w,h));var c=document.createElement('canvas');c.width=Math.round(w*o);c.height=Math.round(h*o);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.85))};im.onerror=function(){alertBox('Bu dosya açılamadı. JPG veya PNG fotoğraf seçin.')};im.src=fr.result};fr.readAsDataURL(dosya)}
 function alertBox(t){var d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;font:14px system-ui;z-index:99';document.body.appendChild(d);setTimeout(function(){d.remove()},3500)}
@@ -2623,6 +2668,56 @@ ac().then(function(){var bekle=kutular.map(function(b,i){b.dataset.k=baslik+'#'+
  return al(b.dataset.k).then(function(v){v=v||PRE[b.dataset.k];if(v&&!MEM[b.dataset.k]){MEM[b.dataset.k]=v}ciz(b,v)})});
  Promise.all(bekle).then(function(){window.fotoHazir=true})});
 })();`;
+
+/* Kulüp fotoğrafları hesapta: görseller Supabase Storage'daki özel "kulup-foto" kovasında (kullanici-id/xxx.jpg),
+   hangi belgede hangi kutuya ait oldukları ve açıklamaları user_data'daki "kulupFoto" kaydında tutulur.
+   Belge önizlemesi (iframe) fotoğraf eklenince/silinince window.kfBuluta'yı çağırır; uygulama açılışta eksikleri indirir. */
+const KF_KOVA = 'kulup-foto'; let KF_HARITA = null, KF_SENK = null; const KF_ZAMAN = {};
+async function kfOzet(t) { const b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+async function sbDepo(yol, ayar = {}) {
+  const istek = async () => fetch(SB.url + '/storage/v1/' + yol, Object.assign({}, ayar, { headers: Object.assign({ apikey: SB.key, Authorization: 'Bearer ' + await Auth.token() }, ayar.headers || {}) }));
+  let r = await istek(); if (r.status === 401 || r.status === 403 && /jwt|token/i.test(await r.clone().text())) { await Auth.yenile(); r = await istek(); } return r;
+}
+function kfBlob(d) { const [ust, gov] = d.split(','); const tur = (/:(.*?);/.exec(ust) || [, 'image/jpeg'])[1]; const b = atob(gov); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new Blob([u], { type: tur }); }
+function kfDataUrl(bl) { return new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.onerror = () => r(null); f.readAsDataURL(bl); }); }
+async function kfHarita() { if (!KF_HARITA) KF_HARITA = Object.assign({}, await Store.get('kulupFoto', {})); return KF_HARITA; }
+function kfDb(is) { return new Promise(r => { try { const q = indexedDB.open('kulupFoto', 1); q.onupgradeneeded = () => q.result.createObjectStore('f'); q.onerror = () => r(); q.onsuccess = () => { try { const t = q.result.transaction('f', 'readwrite'); is(t.objectStore('f')); t.oncomplete = t.onerror = t.onabort = () => { q.result.close(); r(); }; } catch (e) { r(); } }; } catch (e) { r(); } }); }
+window.kfBuluta = (k, v) => { if (!Store.isCloud()) return; clearTimeout(KF_ZAMAN[k]); KF_ZAMAN[k] = setTimeout(() => kfGonder(k, v).catch(() => toast('Fotoğraf hesabınıza kaydedilemedi; internet bağlantınızı kontrol edin.')), 1200); };
+async function kfGonder(k, v) {
+  const H = await kfHarita(); const uid = Auth.kullanici().id;
+  if (!v || !v.img) {
+    if (H[k]) { await sbDepo('object/' + KF_KOVA, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [H[k].p] }) }); delete H[k]; Store.set('kulupFoto', Object.assign({}, H)); }
+    return;
+  }
+  const oz = await kfOzet(v.img); const p = H[k] && H[k].p || `${uid}/${(await kfOzet(k)).slice(0, 24)}.jpg`;
+  if (!H[k] || H[k].i !== oz) {
+    const r = await sbDepo(`object/${KF_KOVA}/${p}`, { method: 'POST', headers: { 'Content-Type': 'image/jpeg', 'x-upsert': 'true', 'cache-control': '3600' }, body: kfBlob(v.img) });
+    if (!r.ok) throw new Error('yükleme ' + r.status);
+  }
+  H[k] = { p, i: oz, cap: v.cap || '', t: Date.now() }; Store.set('kulupFoto', Object.assign({}, H));
+}
+function kfSenkron() {
+  if (!Store.isCloud() || !Auth.kullanici()) return Promise.resolve();
+  return KF_SENK || (KF_SENK = (async () => {
+    const uid = Auth.kullanici().id; const H = await kfHarita();
+    let sahip = null; try { sahip = localStorage.getItem('kf_uid'); } catch (e) { }
+    let yerel = await kfTumu();
+    if (sahip && sahip !== uid) { await kfDb(st => st.clear()); yerel = {}; } // başka bir hesabın fotoğrafları bu cihazda kalmasın
+    else if (!sahip && !Object.keys(H).length) { for (const [k, v] of Object.entries(yerel)) { try { if (v && v.img) await kfGonder(k, v); } catch (e) { } } } // ilk kullanım: bu cihazdakileri hesaba taşı
+    try { localStorage.setItem('kf_uid', uid); } catch (e) { }
+    let degisti = false;
+    for (const [k, m] of Object.entries(H)) {
+      const y = yerel[k];
+      if (y && y.img && await kfOzet(y.img) === m.i) { if ((y.cap || '') !== (m.cap || '')) { await kfDb(st => st.put({ img: y.img, cap: m.cap || '' }, k)); degisti = true; } continue; }
+      try { const r = await sbDepo(`object/authenticated/${KF_KOVA}/${m.p}`); if (!r.ok) continue; const d = await kfDataUrl(await r.blob()); if (d) { await kfDb(st => st.put({ img: d.replace(/^data:[^;]*;/, 'data:image/jpeg;'), cap: m.cap || '' }, k)); degisti = true; } } catch (e) { }
+    }
+    if (sahip === uid) { const sil = Object.keys(yerel).filter(k => !H[k]); if (sil.length) { await kfDb(st => sil.forEach(k => st.delete(k))); degisti = true; } } // başka cihazda kaldırılanlar
+    if (degisti) document.querySelectorAll('.kprev iframe').forEach(f => { f.srcdoc = f.srcdoc; });
+  })().catch(() => { }));
+}
+async function kfHepsiniSil() { // hesap silinirken: bu hesabın bulut fotoğrafları
+  try { const H = await kfHarita(); const L = Object.values(H).map(x => x.p); for (let i = 0; i < L.length; i += 100) await sbDepo('object/' + KF_KOVA, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: L.slice(i, i + 100) }) }); } catch (e) { }
+}
 
 /* Uygulama tarafı: indirirken fotoğrafları dosyaya göm */
 function kfTumu() {
@@ -2722,7 +2817,7 @@ function kGorselKarti(k) {
         h('li', {}, 'Fotoğrafın altındaki açıklama satırına kaynağı yazın. Wikimedia Commons ve Openverse görsellerinde lisans çoğunlukla CC BY veya CC BY-SA olur; bu durumda atıf zorunludur: "Foto: Yazar adı, Wikimedia Commons, CC BY-SA 4.0". Pixabay görsellerinde atıf gerekmez, yazmanız yine de iyi olur.'),
         h('li', {}, 'Lisansı "CC BY-NC" (ticari olmayan) olan görseller okul panosunda kullanılabilir; "Tüm hakları saklıdır" yazan veya lisansı belirtilmeyen görselleri kullanmayın.'),
         h('li', {}, 'Öğrencilerin yüzü görünen etkinlik fotoğraflarını yalnızca veli izin belgesi alınmış öğrenciler için kullanın.'),
-        h('li', {}, 'Fotoğraflar bu cihazdaki tarayıcıda saklanır; aynı belgeyi tekrar oluşturduğunuzda yerinde durur. "İndir" ile aldığınız dosyaya fotoğraflar gömülür; o dosya başka bilgisayarda da fotoğraflarla açılır.'))));
+        h('li', {}, 'Fotoğraflar hesabınıza kaydedilir; aynı belgeyi başka bir cihazdan oluşturduğunuzda da yerinde durur. "İndir" ile aldığınız dosyaya fotoğraflar gömülür; o dosya internet olmadan da fotoğraflarla açılır.'))));
 }
 
 /* ---------- KULÜPLER SEKMESİ (arayüz) ---------- */
@@ -4134,6 +4229,24 @@ function profilKarti() {
     telKutu(), h('p', { class: 'small muted', style: { margin: '0' } }, 'Cep telefonu isteğe bağlıdır; yalnızca branş değişikliği ve destek talepleriniz için size ulaşmakta kullanılır.'),
     h('p', { class: 'small muted', style: { margin: '4px 0 0' } }, 'Okul türü ve branş, hesap paylaşımını önlemek için öğretmen tarafından değiştirilemez. Değişiklik için ', h('a', { href: 'https://wa.me/905468463151?text=' + encodeURIComponent('Merhaba, Öğretmen Çantası hesabımda branş değişikliği istiyorum. E-postam: ' + ((Auth.kullanici() || {}).email || '')), target: '_blank', rel: 'noopener' }, 'bize yazın'), '.'));
 }
+/* Telefona / bilgisayara uygulama olarak ekleme */
+let PWA_ISTEM = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); PWA_ISTEM = e; const k = document.getElementById('uygKart'); if (k) k.replaceWith(uygulamaKart()); });
+window.addEventListener('appinstalled', () => { PWA_ISTEM = null; const k = document.getElementById('uygKart'); if (k) k.remove(); toast('Öğretmen Çantası uygulama olarak eklendi.'); });
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+function uygulamaKart() {
+  const kurulu = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (kurulu) return h('div', { id: 'uygKart', hidden: true });
+  const ua = navigator.userAgent; const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); const mobil = ios || /Android/i.test(ua);
+  const govde = [];
+  if (PWA_ISTEM) govde.push(h('p', { style: { margin: 0 } }, 'Öğretmen Çantası\'nı tek dokunuşla açılan bir uygulama olarak ekleyebilirsiniz. Ayrı bir pencerede, adres çubuğu olmadan açılır.'),
+    h('div', {}, h('button', { class: 'btn pri', type: 'button', onclick: async () => { const p = PWA_ISTEM; PWA_ISTEM = null; p.prompt(); try { await p.userChoice; } catch (e) { } const k = document.getElementById('uygKart'); if (k) k.replaceWith(uygulamaKart()); } }, mobil ? 'Ana ekrana ekle' : 'Uygulama olarak yükle')));
+  else if (ios) govde.push(h('p', { style: { margin: 0 } }, 'iPhone ve iPad\'de Safari ile açın, alttaki ', h('b', {}, 'Paylaş'), ' simgesine (yukarı ok olan kare) dokunun, listeden ', h('b', {}, 'Ana Ekrana Ekle'), '\'yi seçin.'));
+  else if (mobil) govde.push(h('p', { style: { margin: 0 } }, 'Chrome\'da sağ üstteki ', h('b', {}, '⋮'), ' menüsünü açıp ', h('b', {}, 'Ana ekrana ekle'), ' ya da ', h('b', {}, 'Uygulamayı yükle'), '\'yi seçin.'));
+  else govde.push(h('p', { style: { margin: 0 } }, 'Telefonunuzda bu sayfayı açıp buradaki adımlarla ana ekrana ekleyebilirsiniz. Bilgisayarda Chrome ya da Edge\'de adres çubuğunun sağındaki ', h('b', {}, 'yükle'), ' simgesiyle uygulama olarak kurabilirsiniz.'));
+  return h('div', { class: 'card', id: 'uygKart', style: { display: 'grid', gap: '10px', marginBottom: '16px' } }, h('h2', {}, 'Uygulama olarak ekleyin'), ...govde,
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Uygulamaya da aynı hesapla girersiniz; hazırladıklarınız her yerde aynıdır. Çalışmak için internet bağlantısı gerekir.'));
+}
 function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgilerim
   const st = S.settings; const sv = () => { save.settings(); toast('Bilgileriniz kaydedildi.'); };
   const inp = (lab, k, ph, w) => field(lab, h('input', { type: 'text', value: st[k] || '', placeholder: ph || '', style: { width: w || 'min(24rem,100%)' }, onchange: e => { st[k] = e.target.value.trim(); sv(); } }));
@@ -4141,7 +4254,7 @@ function viewBilgiSade(m) { // içerik hazır olmayan branşlar için sade Bilgi
   m.append(profilKarti());
   m.append(h('div', { class: 'card', style: { display: 'grid', gap: '10px' } }, h('h2', {}, 'Kimlik ve okul'),
     h('div', { class: 'row' }, inp('Adınız soyadınız', 'ben', 'Ad SOYAD', '16rem'), inp('Okul adı', 'okul'), inp('Okul müdürü', 'mudur', 'Ad SOYAD', '14rem'), inp('İlçe / il', 'ilce', 'BAKIRKÖY / İSTANBUL', '14rem'))));
-  m.append(hesapSilKart());
+  m.append(uygulamaKart(), hesapSilKart());
 }
 
 
@@ -5008,7 +5121,7 @@ function viewBilgi0(m) {
       h('li', {}, `Yıllık planlar: ${pl.size} plan “★ Benim derslerim” grubunda.`),
       h('li', {}, `Kulüpler: ${B.kulupler.length ? B.kulupler.length + ' kulübünüz en üstte ve varsayılan seçili.' : 'kulüp seçilmedi.'}`))));
 }
-function viewBilgi(m) { viewBilgi0(m); const ilk = m.querySelector('h1 ~ p.lead'); const pk = profilKarti(); if (ilk) ilk.after(pk); else m.prepend(pk); ayarKartlari(m); m.append(hesapSilKart()); }
+function viewBilgi(m) { viewBilgi0(m); const ilk = m.querySelector('h1 ~ p.lead'); const pk = profilKarti(); if (ilk) ilk.after(pk); else m.prepend(pk); ayarKartlari(m); m.append(uygulamaKart(), hesapSilKart()); }
 function hesapSilKart() {
   const u = Auth.kullanici() || {}; const IFADE = 'HESABIMI SİL';
   const durum = h('div', { class: 'small', style: { color: '#b42318' } });
@@ -5016,7 +5129,7 @@ function hesapSilKart() {
   const btn = h('button', { class: 'btn', type: 'button', style: { background: '#b42318', color: '#fff', borderColor: '#b42318' }, onclick: async () => {
     if (giris.value.trim().toLocaleUpperCase('tr') !== IFADE) { durum.textContent = `Onaylamak için kutuya ${IFADE} yazın.`; giris.focus(); return; }
     btn.disabled = true; btn.textContent = 'Siliniyor…'; durum.textContent = '';
-    try { await Auth.hesabiSil(); } catch (e) { durum.textContent = e.message || String(e); btn.disabled = false; btn.textContent = 'Hesabımı kalıcı olarak sil'; }
+    try { await kfHepsiniSil(); await Auth.hesabiSil(); } catch (e) { durum.textContent = e.message || String(e); btn.disabled = false; btn.textContent = 'Hesabımı kalıcı olarak sil'; }
   } }, 'Hesabımı kalıcı olarak sil');
   return h('div', { class: 'card', id: 'hesapSil', style: { marginTop: '28px', display: 'grid', gap: '10px', borderColor: '#e8b4ae' } },
     h('h2', {}, 'Hesabımı sil'),
@@ -5594,7 +5707,7 @@ document.addEventListener('DOMContentLoaded', () => Auth.baslat(async ({ ad }) =
   catch (e) { acilisHatasi('Hesap bilgileriniz alınamadı: ' + (e && e.message || e)); return; }
   if (!location.hash && !icerikVar()) VIEW = 'bilgi';
   const bekci = setTimeout(() => acilisHatasi('Bağlantı beklenenden uzun sürdü.'), 25000);
-  try { await boot(); profilUygula(ilkKurulum); if (ilkKurulum) render(); } catch (e) { clearTimeout(bekci); acilisHatasi('Beklenmeyen bir hata oluştu: ' + (e && e.message || e)); return; }
+  try { await boot(); profilUygula(ilkKurulum); if (ilkKurulum) render(); setTimeout(kfSenkron, 2500); } catch (e) { clearTimeout(bekci); acilisHatasi('Beklenmeyen bir hata oluştu: ' + (e && e.message || e)); return; }
   clearTimeout(bekci);
   if (ad && !S.settings.ben) { S.settings.ben = ad; save.settings(); render(); } // kayıtta yazılan ad Bilgilerim'e gelir
 }));
