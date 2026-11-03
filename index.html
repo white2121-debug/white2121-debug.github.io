@@ -1160,11 +1160,24 @@ function pickQuestions(spec) {
     const rest = [1, 2, 3].flatMap(z => byZ[z]).filter(q => !take.includes(q));
     const order = spec.prog !== 'orgun' || isBep ? rest.sort((a, b) => a.z - b.z) : rest;
     while (take.length < n && order.length) take.push(order.shift());
-    chosen.push(...take.slice(0, n));
+    chosen.push(...grupTamamla(take.slice(0, n), cands, n));
   }
   return { questions: chosen.map(q => ({ id: q.id, p: 0 })), warnings };
 }
 
+// Ortak senaryolu soru grupları (q.grup, q.baglam): gruptan bir soru seçildiyse aynı türdeki kardeşleri de gelir; sayı korunmaya çalışılır
+function grupTamamla(sec, cands, n) {
+  const G = [...new Set(sec.filter(q => q.grup).map(q => q.grup))]; if (!G.length) return sec;
+  const out = sec.slice();
+  G.forEach(g => cands.filter(q => q.grup === g && !out.includes(q)).forEach(q => out.push(q)));
+  for (let i = out.length - 1; out.length > n && i >= 0; i--) if (!out[i].grup) out.splice(i, 1);
+  return grupBitisik(out);
+}
+function grupBitisik(arr, idOf = x => x) { // aynı gruptaki sorular yan yana, ilk görülen yerde
+  const out = [], yer = new Set();
+  arr.forEach(x => { const q = idOf(x); if (!q || !q.grup) { out.push(x); return; } if (yer.has(q.grup)) return; yer.add(q.grup); arr.forEach(y => { const r = idOf(y); if (r && r.grup === q.grup) out.push(y); }); });
+  return out;
+}
 // öğretmenin kendi soru bankasından gelen sorular öncelikli (Ayar: Sınav hazırla › Soru sayısı ve zorluk)
 function oncelik(q) { return q && q.k === 'ogretmen' && S.settings.oncelikBenim !== false ? 1 : 0; }
 function weightOf(q) { const zW = S.settings.zW; return (zW[q.z || 1] || 1) * (TIP[q.tip] ? TIP[q.tip].w : 1); }
@@ -1187,7 +1200,7 @@ function buildGroups(exam) {
     const r = rnd((exam.seed || 1) * 97 + g * 7919 + 13);
     const bySec = {}; exam.items.forEach(it => { const q = qById(it.id); if (!q) return; (bySec[q.tip] = bySec[q.tip] || []).push(it); });
     const order = [];
-    TIP_SIRA.forEach(t => { if (bySec[t]) order.push(...(g === 0 ? bySec[t] : shuffle(bySec[t], r))); });
+    TIP_SIRA.forEach(t => { if (bySec[t]) order.push(...grupBitisik(g === 0 ? bySec[t] : shuffle(bySec[t], r), it => qById(it.id))); });
     const items = order.map(it => {
       const q = qById(it.id); let perm = null;
       if (q.tip === 'coktan' && q.s && g > 0 && !q.sabitSik) perm = shuffle(q.s.map((_, i) => i), r);
@@ -1396,14 +1409,20 @@ function buildExamDoc(ex, g) {
   doc.p('', { after: 2 }); pointsTable(g.items).forEach(t => doc.add(t));
   doc.p([{ t: 'Açıklama: ', b: true }, ex.aciklama || `Sınav süresi ${ex.sure || st.sure} dakikadır. Soruları dikkatlice okuyunuz. Başarılar dileriz.`], { after: 6, before: 4, size: size - 1 });
   const two = ex.ikiSutun && !bep; if (two) doc.section({ cols: 1 });
-  let lastTip = null; let no = 0;
-  g.items.forEach(it => {
+  let lastTip = null; let no = 0; let sonGrup = null;
+  g.items.forEach((it, ix) => {
     const q = qById(it.id); if (!q) return; no++;
     if (ex.bolumBaslik !== false && q.tip !== lastTip) {
       const yon = { 'dogru-yanlis': 'Aşağıdaki ifadelerden doğru olanların başına "D", yanlış olanların başına "Y" yazınız.', 'bosluk': 'Aşağıdaki cümlelerde boş bırakılan yerleri uygun ifadelerle doldurunuz.', 'eslestirme': 'Aşağıdaki kavramları uygun açıklamalarla eşleştiriniz.', 'coktan': 'Aşağıdaki çoktan seçmeli soruların doğru cevabını işaretleyiniz.', 'kisa': 'Aşağıdaki soruları kısaca cevaplayınız.', 'acik': 'Aşağıdaki soruları açıklayarak cevaplayınız.', 'islem': 'Aşağıdaki işlemleri/kayıtları yapınız.', 'gorev': `Aşağıdaki görevleri ${ex.yazilim ? yazilimAd(ex.yazilim) + ' programında' : 'muhasebe programında'} yapınız.` }[q.tip];
       if (yon) doc.p({ t: yon, b: true, i: true }, { after: 4, before: lastTip ? 6 : 2, size: size - 0.5, keep: true });
       lastTip = q.tip;
     }
+    if (q.grup && q.baglam && q.grup !== sonGrup) {
+      let k = 0; for (let j = ix + 1; j < g.items.length; j++) { const r = qById(g.items[j].id); if (r && r.grup === q.grup) k++; else break; }
+      doc.p({ t: k ? `${no}-${no + k}. soruları aşağıdaki bilgilere göre cevaplayınız.` : 'Aşağıdaki soruyu verilen bilgilere göre cevaplayınız.', b: true }, { before: 4, after: 2, size, keep: true });
+      doc.p(mixedRuns(q.baglam), { after: 4, size, keep: true, ind: 0.3 });
+    }
+    sonGrup = q.grup || null;
     writeQuestion(doc, q, no, it.p, it.perm, { size, cols: two ? 2 : 1, bep, line: bep ? 1.4 : 1 });
   });
   if (two) doc.section({ cols: 2, sep: true });
@@ -4181,7 +4200,7 @@ function secKutu({ deger = '', secenekler = [], ph = '', sec, kapali = false, bo
 const ICERIKLI_SEKME = ['sinav', 'banka', 'odev', 'plan', 'zumre'];
 /* Branşa göre hazır içerik. Anahtar: meslek alan öğretmeninde alan adı, lise ortak derslerinde branş adı (sunucudaki icerik_alani() ile aynı kural). */
 const P_LISE_OKUL = ['lise', 'aihl', 'mtal', 'mesem', 'acik', 'bilsem'];
-const ICERIK_KAPSAM = { 'Muhasebe ve Finansman': ['sinav', 'banka', 'odev', 'plan', 'zumre'], 'Matematik': ['plan'] };
+const ICERIK_KAPSAM = { 'Muhasebe ve Finansman': ['sinav', 'banka', 'odev', 'plan', 'zumre'], 'Matematik': ['plan', 'sinav', 'banka'] };
 function icerikAlani(p = PROFIL) {
   if (!p) return null;
   if (P_MESLEK_OKUL.includes(p.okul_turu) && p.brans === P_ALAN_OGR) return p.alan || null;
@@ -4340,6 +4359,7 @@ async function icOku(alan) {
 function icerikUygula(onb) {
   const parca = p => Object.keys(onb || {}).filter(k => k.startsWith(p)).sort().map(k => onb[k].veri);
   BANK = [].concat(...parca('bank-')); PLAN = { planlar: [].concat(...parca('plan-')) };
+  if (onb && onb.dersler) COURSES = onb.dersler.veri; else if (!tamIcerik()) COURSES = [];
   PROJE = { topics: (onb && onb['proje-konular'] || {}).veri || [], img: Object.assign({}, ...parca('proje-resim-')) };
 }
 async function icerikYukle() {
@@ -5531,10 +5551,10 @@ function viewSinav(m) {
     h('h2', {}, 'Sınav türü'),
     h('div', { class: 'row' },
       seg([['donem', 'Dönem sınavı'], ['sorumluluk', 'Sorumluluk sınavı']], W.tur, v => { W.tur = v; if (v === 'sorumluluk') { W.grupSayisi = 1; W.units = []; W.uygulama = false; } W.items = []; render(); }),
-      seg(Object.entries(PROG), W.prog, v => { W.prog = v; resetZ(); W.counts = defaultCounts(W.ders); W.sinifKod = ''; W.items = []; render(); })),
+      tamIcerik() ? seg(Object.entries(PROG), W.prog, v => { W.prog = v; resetZ(); W.counts = defaultCounts(W.ders); W.sinifKod = ''; W.items = []; render(); }) : null),
     h('div', { class: 'row', style: { marginTop: '8px' } },
       h('label', { class: 'chip' + (W.bep ? ' on' : '') }, h('input', { type: 'checkbox', checked: W.bep, onchange: e => { W.bep = e.target.checked; if (W.bep) W.grupSayisi = 1; resetZ(); W.counts = defaultCounts(W.ders); W.items = []; render(); } }), 'BEP (kaynaştırma) sınavı'),
-      W.tur === 'donem' ? h('label', { class: 'chip' + (W.uygulama ? ' on' : '') }, h('input', { type: 'checkbox', checked: W.uygulama, onchange: e => { W.uygulama = e.target.checked; W.counts = defaultCounts(W.ders); W.items = []; render(); } }), 'Uygulamalı sınav (' + yazilimAd(W.yazilim || S.settings.yazilim) + ' görev kâğıdı)') : null),
+      tamIcerik() && W.tur === 'donem' ? h('label', { class: 'chip' + (W.uygulama ? ' on' : '') }, h('input', { type: 'checkbox', checked: W.uygulama, onchange: e => { W.uygulama = e.target.checked; W.counts = defaultCounts(W.ders); W.items = []; render(); } }), 'Uygulamalı sınav (' + yazilimAd(W.yazilim || S.settings.yazilim) + ' görev kâğıdı)') : null),
     YAZILIM_DERS.includes(W.ders) ? h('div', { class: 'row', style: { marginTop: '8px', alignItems: 'center' } }, h('span', { class: 'small muted' }, 'Muhasebe programı:'),
       seg(Object.entries(YAZILIM), W.yazilim || S.settings.yazilim, v => { W.yazilim = v; S.settings.yazilim = v; save.settings && save.settings(); W.items = []; render(); }),
       h('span', { class: 'small muted' }, 'Programa özgü sorular yalnız seçilen programdan gelir; genel sorular her ikisinde de kullanılır.')) : null));
@@ -5624,9 +5644,9 @@ function swapQuestion(idx) {
 function qPreview(q, opts = {}) {
   const c = course(q.ders);
   const meta = h('div', { class: 'meta' }, h('span', { class: 'pill ptip' }, TIP[q.tip] ? TIP[q.tip].kisa : q.tip), h('span', { class: `pill pz${q.z || 1}` }, ZOR[q.z || 1]), q.u ? h('span', { class: 'pill ptip', title: unitName(c, q.u) }, `${q.u}. ünite`) : null,
-    q.bep ? h('span', { class: 'pill pbep' }, 'BEP') : null, q.yazilim ? h('span', { class: 'pill ptip', title: 'Bu programa özgü soru' }, yazilimAd(q.yazilim)) : null, q.k === 'uretim' ? h('span', { class: 'pill pgen', title: 'Ders kitabına göre Claude tarafından yazıldı; kontrol edin.' }, 'Yeni yazıldı') : null, q.k === 'ogretmen' ? h('span', { class: 'pill pben', title: q.kaynak ? 'Kaynak: ' + q.kaynak : 'Sizin soru bankanız' }, '★ Sizin bankanız') : null,
+    q.bep ? h('span', { class: 'pill pbep' }, 'BEP') : null, q.yazilim ? h('span', { class: 'pill ptip', title: 'Bu programa özgü soru' }, yazilimAd(q.yazilim)) : null, q.k === 'ogretmen' ? h('span', { class: 'pill pben', title: q.kaynak ? 'Kaynak: ' + q.kaynak : 'Sizin soru bankanız' }, '★ Sizin bankanız') : null,
     usedCount(q) ? h('span', { class: 'pill pused', title: usedLabel(q).join(', ') }, `Kullanıldı ×${usedCount(q)}`) : null, (q.tablo || q.tablolar) ? h('span', { class: 'pill ptip' }, 'Tablolu') : null, q.img ? h('span', { class: 'pill ptip' }, 'Görselli') : null);
-  const t = h('div', { class: 'txt' }, h('div', { html: escH(q.q).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') }));
+  const t = h('div', { class: 'txt' }, q.baglam ? h('div', { class: 'small', style: { borderLeft: '3px solid var(--line)', paddingLeft: '8px', marginBottom: '6px', whiteSpace: 'pre-line' } }, h('b', {}, 'Ortak senaryo: '), q.baglam) : null, h('div', { html: escH(q.q).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') }));
   if (q.tablo && q.tablo.rows) t.append(h('div', { class: 'scroll-x' }, h('table', { class: 't' }, q.tablo.rows.map((r, i) => h('tr', {}, r.map(x => h(i === 0 && q.tablo.head !== false ? 'th' : 'td', {}, x)))))));
   if (q.tablolar) q.tablolar.forEach(tb => t.append(h('div', { class: 'scroll-x' }, tb.baslik ? h('div', { class: 'small', style: { fontWeight: '600', marginTop: '6px' } }, tb.baslik) : null, h('table', { class: 't' }, tb.rows.map((r, i) => h('tr', {}, r.map(x => h(i === 0 && tb.head !== false ? 'th' : 'td', {}, x))))))));
   const gorsel = (d, alt) => h('img', { src: d, alt, loading: 'lazy', style: { display: 'block', maxWidth: 'min(100%, 560px)', height: 'auto', margin: '6px 0', border: '1px solid var(--line)', borderRadius: '6px', background: '#fff' } });
