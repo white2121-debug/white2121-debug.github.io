@@ -1553,7 +1553,7 @@ const BELGE_EKRAN_CSS = `@media screen{body{background:#7d8590;padding:56px 0 24
 @media print{.bar{display:none}}`;
 function belgeHTML(b, v) {
   const ad = b.ad + (b.ornek ? ' (örnek)' : '');
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${ad} – ${v.YIL}</title><style>${BELGE.css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span style="flex:1">${ad} · ${v.YIL}</span><button type="button" onclick="print()">Yazdır / PDF kaydet</button></div>${belgeDoldur(b.html, v)}</body></html>`;
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${ad} – ${v.YIL}</title><style>${BELGE.css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span style="flex:1">${ad} · ${v.YIL}</span><button type="button" onclick="if(parent!==window&&parent.baslikliYazdir)parent.baslikliYazdir(window);else print()">Yazdır / PDF kaydet</button></div>${belgeDoldur(b.html, v)}</body></html>`;
 }
 function belgeDosyaAdi(b, v) { return safeName(`${b.ad.split(' (')[0]}${b.ornek ? '_ORNEK' : ''}_${v.YIL}`) + '.html'; }
 function belgeYazdir(b) {
@@ -1561,7 +1561,7 @@ function belgeYazdir(b) {
   if (window.claude) { toast('Bu görünümde yazdırma kapalı; "İndir" ile dosyayı alın ve açtığınız dosyadan yazdırın.'); return; }
   const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   f.srcdoc = belgeHTML(b, v); document.body.append(f);
-  f.onload = () => { setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('Yazdırılamadı; "İndir" ile dosyayı alın.'); } setTimeout(() => f.remove(), 60000); }, 300); };
+  f.onload = () => { setTimeout(() => { try { baslikliYazdir(f.contentWindow); } catch (e) { toast('Yazdırılamadı; "İndir" ile dosyayı alın.'); } setTimeout(() => f.remove(), 60000); }, 300); };
 }
 function belgeIndir(b) { const v = belgeVars(); download(new Blob([belgeHTML(b, v)], { type: 'text/html' }), belgeDosyaAdi(b, v)); }
 function belgeOnizle(b) { const w = window.open(URL.createObjectURL(new Blob([belgeHTML(b, belgeVars())], { type: 'text/html' })), '_blank'); if (!w) belgeIndir(b); }
@@ -1638,7 +1638,7 @@ function projeKutusu(m) {
   const hazir = () => { if (!P.ad.trim()) { toast('Önce öğrencinin adını soyadını yazın.'); $('#pj-ad') && $('#pj-ad').focus(); return null; } return { ad: P.ad.trim(), no: P.no.trim(), sinif: P.sinif, isletme: P.isletme.trim(), usta: P.usta.trim(), koord: P.koord.trim(), n: +P.n || 30, tohum: P.tohum }; };
   const onizle = () => { const o = hazir(); if (!o) return; prev.innerHTML = ''; const f = h('iframe', { title: 'Proje sayfaları önizleme', style: { width: '100%', height: '80vh', border: '1px solid var(--line)', borderRadius: '10px', background: '#7d8590' } }); f.srcdoc = projeHTML(o); prev.append(h('p', { class: 'small muted' }, `${o.ad} için ${o.n} sayfa hazırlandı (${aktifYil()}). Sayfalar kaydırılarak incelenebilir.`), f); prev.scrollIntoView({ behavior: 'smooth' }); };
   const indir = () => { const o = hazir(); if (!o) return; islemKaydet('proje'); download(new Blob([projeHTML(o)], { type: 'text/html' }), projeDosyaAdi(o)); };
-  const yazdir = () => { const o = hazir(); if (!o) return; if (window.claude) { toast('Bu görünümde yazdırma kapalı; "İndir" ile dosyayı alıp açtığınız dosyadan yazdırın.'); return; } const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; f.srcdoc = projeHTML(o); document.body.append(f); f.onload = () => setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('Yazdırılamadı; "İndir" ile dosyayı alın.'); } setTimeout(() => f.remove(), 60000); }, 600); };
+  const yazdir = () => { const o = hazir(); if (!o) return; if (window.claude) { toast('Bu görünümde yazdırma kapalı; "İndir" ile dosyayı alıp açtığınız dosyadan yazdırın.'); return; } const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; f.srcdoc = projeHTML(o); document.body.append(f); f.onload = () => setTimeout(() => { try { baslikliYazdir(f.contentWindow); } catch (e) { toast('Yazdırılamadı; "İndir" ile dosyayı alın.'); } setTimeout(() => f.remove(), 60000); }, 600); };
   const toplu = () => {
     const satir = (P.liste || '').split('\n').map(x => x.trim()).filter(Boolean);
     if (!satir.length) { toast('Toplu liste boş.'); return; }
@@ -1897,7 +1897,7 @@ function projeOlustur(o) {
 }
 function projeHTML(o) {
   const v = belgeVars(); const ad = `Proje Sayfaları – ${o.ad || 'Öğrenci'}`;
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${PE(ad)} – ${v.YIL}</title><style>${BELGE.css}${PROJE_CSS}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span style="flex:1">${PE(ad)} · ${o.n || 30} sayfa · ${v.YIL}</span><button type="button" onclick="print()">Yazdır / PDF kaydet</button></div>${projeOlustur(Object.assign({ yil: v.YIL }, o))}${PROJE_FIT}</body></html>`;
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${PE(ad)} – ${v.YIL}</title><style>${BELGE.css}${PROJE_CSS}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span style="flex:1">${PE(ad)} · ${o.n || 30} sayfa · ${v.YIL}</span><button type="button" onclick="if(parent!==window&&parent.baslikliYazdir)parent.baslikliYazdir(window);else print()">Yazdır / PDF kaydet</button></div>${projeOlustur(Object.assign({ yil: v.YIL }, o))}${PROJE_FIT}</body></html>`;
 }
 
 /* ===================== KULÜPLER (TYMM Sosyal Etkinlikler) =====================
@@ -2138,7 +2138,7 @@ ol.mad{margin:1mm 0;padding-left:6mm}ol.mad li{margin:1mm 0;line-height:1.35;tex
 .bar{position:fixed;top:0;left:0;right:0;background:#0f6b5c;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 16px;display:flex;gap:12px;align-items:center;z-index:9}.bar button{font:inherit;background:#f2b43c;color:#222;border:0;border-radius:8px;padding:6px 14px;cursor:pointer}}
 @media print{.bar{display:none}}`;
 function kDoc(baslik, govde, ekCss = '') {
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${kEsc(baslik)}</title><style>${K_CSS}${ekCss}${KF_CSS}</style></head><body><div class="bar"><span style="flex:1">${kEsc(baslik)}</span><span style="font-weight:400;font-size:12px">Fotoğraf kutularına tıklayarak fotoğraf ekleyebilirsiniz</span><button type="button" onclick="print()">Yazdır / PDF kaydet</button></div>${govde}<!--FOTO-DATA--><script>${KF_JS}<\/script></body></html>`;
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${kEsc(baslik)}</title><style>${K_CSS}${ekCss}${KF_CSS}</style></head><body><div class="bar"><span style="flex:1">${kEsc(baslik)}</span><span style="font-weight:400;font-size:12px">Fotoğraf kutularına tıklayarak fotoğraf ekleyebilirsiniz</span><button type="button" onclick="if(parent!==window&&parent.baslikliYazdir)parent.baslikliYazdir(window);else print()">Yazdır / PDF kaydet</button></div>${govde}<!--FOTO-DATA--><script>${KF_JS}<\/script></body></html>`;
 }
 function kAcik(c) { // açık ton
   const n = parseInt(c.slice(1), 16); const r = n >> 16, g = (n >> 8) & 255, b = n & 255; const m = x => Math.round(x + (255 - x) * 0.86);
@@ -2841,7 +2841,7 @@ function kOnizleKutusu() {
 function kYazdir(html) {
   if (window.claude) { toast('Bu görünümde yazdırma kapalı; "İndir" ile dosyayı alın ve açtığınız dosyadan yazdırın.'); return; }
   const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; f.srcdoc = html; document.body.append(f);
-  f.onload = () => { const t0 = Date.now(); const bas = () => { if (!f.contentWindow.fotoHazir && Date.now() - t0 < 4000) { setTimeout(bas, 150); return; } setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('Yazdırılamadı; "İndir" ile dosyayı alın.'); } setTimeout(() => f.remove(), 60000); }, 400); }; bas(); };
+  f.onload = () => { const t0 = Date.now(); const bas = () => { if (!f.contentWindow.fotoHazir && Date.now() - t0 < 4000) { setTimeout(bas, 150); return; } setTimeout(() => { try { baslikliYazdir(f.contentWindow); } catch (e) { toast('Yazdırılamadı; "İndir" ile dosyayı alın.'); } setTimeout(() => f.remove(), 60000); }, 400); }; bas(); };
 }
 function kSecici(val, onchange, id) {
   const BK = typeof benimKulupIdleri === 'function' ? benimKulupIdleri() : new Set();
@@ -3257,6 +3257,13 @@ function pDocx(id, yil) {
   return d.blob();
 }
 
+/* Yazdır / PDF: tarayıcı PDF dosyasına ana sayfanın başlığını ad olarak verir; yazdırma süresince belgenin adını kullan */
+window.baslikliYazdir = w => {
+  const eski = document.title; let t = ''; try { t = w.document.title; } catch (e) { }
+  const geri = () => { document.title = eski; };
+  if (t) { document.title = t; try { w.addEventListener('afterprint', () => setTimeout(geri, 300), { once: true }); } catch (e) { } setTimeout(geri, 120000); }
+  w.focus(); w.print(); if (t) setTimeout(geri, 1500);
+};
 /* ---------- Yazdırma / PDF (HTML) ---------- */
 function pHTML(id, yil) {
   const p = pById(id); const v = belgeVars(); const saat = (PS().saat || {})[id] || p.saat; const R = pPlan(p, yil, saat);
@@ -3638,7 +3645,7 @@ h3{font-size:11pt;margin:12px 0 4px;text-decoration:underline}ol.gun{margin:0;pa
 .ig{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 10px;text-align:center}.ig .ad{font-weight:bold;margin-top:26px}
 .onay{text-align:center;margin:26px auto 0;width:60mm}.onay .ad{font-weight:bold;margin-top:26px}`;
   const ad = `${R.yil} ${ZM_TUR[R.tur]} ${ZM_DONEM[R.donem]}`;
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${zmEsc(ad)}</title><style>${css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span>${zmEsc(ad)} tutanağı</span><button onclick="print()">Yazdır / PDF</button></div><div class="page">${h}</div></body></html>`;
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${zmEsc(ad)}</title><style>${css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span>${zmEsc(ad)} tutanağı</span><button onclick="if(parent!==window&&parent.baslikliYazdir)parent.baslikliYazdir(window);else print()">Yazdır / PDF</button></div><div class="page">${h}</div></body></html>`;
 }
 function zmDocx(R) {
   const d = new DOCX.Doc({ font: 'Times New Roman', size: 11, margin: 1.8 });
@@ -3911,7 +3918,7 @@ h3{font-size:11pt;margin:12px 0 4px;text-decoration:underline}ol.gun{margin:0;pa
 .ig{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 10px;text-align:center;font-size:10pt}.ig .ad{font-weight:bold;margin-top:26px;font-size:11pt}
 .onay{text-align:center;margin:26px auto 0;width:60mm}.onay .ad{font-weight:bold;margin-top:26px}`;
   const ad = `${R.yil} ${R.sube} ŞÖK ${SK_TOP[R.top]}`;
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${zmEsc(ad)}</title><style>${css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span>${zmEsc(ad)} tutanağı</span><button onclick="print()">Yazdır / PDF</button></div><div class="page">${h}</div></body></html>`;
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${zmEsc(ad)}</title><style>${css}${BELGE_EKRAN_CSS}</style></head><body><div class="bar"><span>${zmEsc(ad)} tutanağı</span><button onclick="if(parent!==window&&parent.baslikliYazdir)parent.baslikliYazdir(window);else print()">Yazdır / PDF</button></div><div class="page">${h}</div></body></html>`;
 }
 function skDocx(R) {
   const d = new DOCX.Doc({ font: 'Times New Roman', size: 11, margin: 1.8 });
