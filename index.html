@@ -3198,6 +3198,10 @@ function pPlan(p, yil, saat) {
 }
 
 function pBaslik(p, v) { return [`${v.OKUL || p.okulVarsayilan || '……………… MESLEKİ VE TEKNİK ANADOLU LİSESİ'} ${v.YIL} EĞİTİM VE ÖĞRETİM YILI`, `${p.sinif === 'Hazırlık' ? 'HAZIRLIK SINIFI' : p.sinif + '. SINIFLAR'} ${p.baslik}`]; }
+/* Haftalık ders saati: öğretmenin girdiği değer, yoksa okul türüne göre resmî değer (MEB haftalık ders çizelgesi / çerçeve programı), yoksa planın kendi değeri */
+const pSaatVars = p => { const t = PROFIL && PROFIL.okul_turu; const o = p.saatOkul || {}; return (t && o[t] != null) ? o[t] : p.saat; };
+const pSaat = p => (PS().saat || {})[p.id] || pSaatVars(p);
+const pSaatNot = p => { const t = PROFIL && PROFIL.okul_turu; const o = p.saatOkul || {}; return (t && o[t] != null) ? `${(P_OKUL.find(x => x[0] === t) || [, t])[1]} için MEB haftalık ders çizelgesindeki değer (${o[t]} saat).` : (p.saatKaynak || 'Planın dayandığı MEB programındaki değer.'); };
 const pDosyaAd = (p, yil) => safeName(`${p.sinif}_Sinif_${p.ders}_Yillik_Plan_${yil}`);
 function pNotlar(p) {
   return [`• Bu yıllık plan; 19.09.2022 tarih ve 58168473 sayılı "Millî Eğitim Bakanlığı Eğitim Öğretim Çalışmalarının Planlı Yürütülmesine İlişkin Yönerge", ${p.program}, Türkiye Yüzyılı Maarif Modeli Öğretim Programları Ortak Metni ve MEB çalışma takvimi esas alınarak hazırlanmıştır.`,
@@ -3243,7 +3247,7 @@ function pSatirYuk(cells, widths) { // tahmini satır yüksekliği (pt)
   return Math.min(409, Math.round(mx * 10.2 + 9));
 }
 function pXlsx(id, yil) {
-  const p = pById(id); const v = belgeVars(); const saat = (PS().saat || {})[id] || p.saat; const R = pPlan(p, yil, saat);
+  const p = pById(id); const v = belgeVars(); const saat = pSaat(p); const R = pPlan(p, yil, saat);
   if (pKolon(p)) return pXlsxG(p, pKolon(p), yil, v, R);
   const N = P_KOL.length, L = String.fromCharCode(64 + N); const widths = P_KOL.map(k => k[1]); const rows = []; const mg = [];
   const bos = s => Array.from({ length: N }, () => ({ v: '', s }));
@@ -3269,7 +3273,7 @@ function pXlsx(id, yil) {
 
 /* ---------- Word (.docx, yatay) ---------- */
 function pDocx(id, yil) {
-  const p = pById(id); const v = belgeVars(); const saat = (PS().saat || {})[id] || p.saat; const R = pPlan(p, yil, saat);
+  const p = pById(id); const v = belgeVars(); const saat = pSaat(p); const R = pPlan(p, yil, saat);
   if (pKolon(p)) return pDocxG(p, pKolon(p), yil, v, R);
   const d = new DOCX.Doc({ font: 'Calibri', size: 7, margin: 0.8, land: true });
   pBaslik(p, v).forEach((t, i) => d.p([{ t, b: true, sz: 10.5 }], { align: 'center', after: i ? 4 : 0 }));
@@ -3297,7 +3301,7 @@ window.baslikliYazdir = w => {
 };
 /* ---------- Yazdırma / PDF (HTML) ---------- */
 function pHTML(id, yil) {
-  const p = pById(id); const v = belgeVars(); const saat = (PS().saat || {})[id] || p.saat; const R = pPlan(p, yil, saat);
+  const p = pById(id); const v = belgeVars(); const saat = pSaat(p); const R = pPlan(p, yil, saat);
   if (pKolon(p)) return pHTMLG(p, pKolon(p), yil, v, R);
   const top = P_KOL.reduce((a, k) => a + k[1], 0); const br = s => kEsc(s || '').replace(/\n/g, '<br>');
   const HW = P_KOL.map((k, i) => i === 0 ? 6 : i === 2 ? 3.5 : k[1]); const ht = HW.reduce((a, b) => a + b, 0); const head = `<tr>${P_KOL.map((k, i) => `<th style="width:${(HW[i] / ht * 100).toFixed(2)}%">${k[0]}</th>`).join('')}</tr>`;
@@ -3396,15 +3400,16 @@ function viewPlan(m) {
       field('Okul müdürü', h('input', { type: 'text', value: S.settings.mudur || '', style: { width: '13rem' }, onchange: e => { S.settings.mudur = e.target.value.trim(); sv(); } }))),
     takvimKutusu(yil)));
   const pv = kOnizleKutusu(); let acik = false, zz = null;
-  const goster = () => { acik = true; const R = pPlan(p, yil, (P.saat || {})[p.id] || p.saat); const n = R.rows.filter(r => r.tip === 'icerik').length; pv.goster(pHTML(p.id, yil), pDosyaAd(p, yil) + '.html', `${R.rows.length} satır: ${n} ders haftası, ${R.rows.filter(r => r.tip === 'sinav').length} yazılı haftası, ${R.rows.filter(r => r.tip === 'tatil').length} tatil. Zümre: ${pZumre().join(', ')}.${R.birlesen ? ` Takvim kısa olduğu için ${R.birlesen} haftalık içerik bir önceki haftayla birleştirildi.` : ''}${R.pek ? ` ${R.pek} hafta pekiştirme olarak eklendi.` : ''}`, true); };
+  const goster = () => { acik = true; const R = pPlan(p, yil, pSaat(p)); const n = R.rows.filter(r => r.tip === 'icerik').length; pv.goster(pHTML(p.id, yil), pDosyaAd(p, yil) + '.html', `${R.rows.length} satır: ${n} ders haftası, ${R.rows.filter(r => r.tip === 'sinav').length} yazılı haftası, ${R.rows.filter(r => r.tip === 'tatil').length} tatil. Zümre: ${pZumre().join(', ')}.${R.birlesen ? ` Takvim kısa olduğu için ${R.birlesen} haftalık içerik bir önceki haftayla birleştirildi.` : ''}${R.pek ? ` ${R.pek} hafta pekiştirme olarak eklendi.` : ''}`, true); };
   const tazele = () => { if (!acik) return; clearTimeout(zz); zz = setTimeout(goster, 500); };
   m.append(h('div', { class: 'card', style: { marginTop: '16px', display: 'grid', gap: '10px' } },
     h('h2', {}, 'Plan'),
     h('div', { class: 'row' },
       pProglar().length > 1 ? field(pProglar().some(([k]) => k === 'anadolu') ? 'Okul türü' : 'Program', seg(pProglar(), pProg(p), v => { const L = pListe(v); const taban = p.id.replace(/^acik-/, ''); const es = v === 'acik' ? 'acik-' + taban : v === 'orgun' ? taban : null; P.sec = (L.find(x => x.id === es) || L.find(x => x.ders === p.ders && x.sinif === p.sinif) || L.find(x => x.sinif === p.sinif) || L[0]).id; sv(); render(); })) : null,
       field(`Ders (${pListe(pProg(p)).length} ders)`, h('select', { onchange: e => { P.sec = e.target.value; P.secElle = true; sv(); render(); } }, (L => { const BP = benimPlanIdleri(); const ben = L.filter(x => BP.has(x.id.replace(/^acik-/, ''))); const o = (x, y) => h('option', { value: x.id, selected: x.id === p.id && (y || !ben.includes(x)) }, `${y ? B_YILDIZ : ''}${x.ders}${y ? ' – ' + pSnf(String(x.sinif).replace('AÇIK LİSE ', 'Açık lise ')) : ''}${x.secmeli ? ' (seçmeli)' : ''}`); return (ben.length ? [h('optgroup', { label: '★ Benim derslerim' }, ben.map(x => o(x, true)))] : []).concat([...new Set(L.map(x => x.sinif))].map(sn => h('optgroup', { label: pSnf(sn).replace('AÇIK LİSE', 'Açık lise') }, L.filter(x => x.sinif === sn).map(x => o(x, false))))); })(pListe(pProg(p))))),
-      field('Haftalık ders saati', h('input', { type: 'number', min: 1, max: 12, value: (P.saat || {})[p.id] || p.saat, style: { width: '6rem' }, id: 'yp-saat', oninput: e => { P.saat[p.id] = +e.target.value || p.saat; sv(); tazele(); } })),
+      field('Haftalık ders saati', h('input', { type: 'number', min: 1, max: 12, value: pSaat(p), style: { width: '6rem' }, id: 'yp-saat', oninput: e => { P.saat[p.id] = +e.target.value || pSaatVars(p); sv(); tazele(); } })),
       field('Onay tarihi (UYGUNDUR)', h('input', { type: 'text', value: pOnay(yil), style: { width: '9rem' }, id: 'yp-onay', oninput: e => { P.onay[yil] = e.target.value.trim(); sv(); tazele(); } }))),
+    h('p', { class: 'small muted', style: { margin: 0 } }, 'Haftalık ders saati varsayılanı: ' + pSaatNot(p) + ((PS().saat || {})[p.id] ? ' Sizin girdiğiniz değer kullanılıyor.' : ' Okulunuzun çizelgesi farklıysa kutudan değiştirebilirsiniz.')),
     p.secmeli ? h('p', { class: 'small', style: { margin: 0, color: '#9a5b00' } }, 'Seçmeli derslerin haftalık saati çerçeve programda okul tercihine bırakılmıştır; ders saatini okulunuzun haftalık ders çizelgesine göre kontrol edin.') : null,
     field('Zümre öğretmenleri (virgülle ayırın: Ad SOYAD, Ad SOYAD; hepsi imza bölümüne yazılır)', h('input', { type: 'text', value: P.zumre, placeholder: S.settings.ben || 'Ad SOYAD, Ad SOYAD', id: 'yp-zumre', style: { width: '100%' }, oninput: e => { P.zumre = e.target.value; sv(); tazele(); } })),
     field('Ek not (isteğe bağlı, notlar bölümüne eklenir)', h('input', { type: 'text', value: P.ekNot, style: { width: '100%' }, id: 'yp-not', oninput: e => { P.ekNot = e.target.value.trim(); sv(); tazele(); } })),
@@ -5746,7 +5751,7 @@ function viewBanka(m) {
       field('Ünite', sel('f-u', F.u, [['', 'Tümü'], ...(c ? c.uniteler.map((u, i) => [i + 1, `${i + 1}. ${u}`]) : []), ['0', 'Belirtilmemiş']], v => F.u = v)),
       field('Tür', sel('f-tip', F.tip, [['', 'Tümü'], ...Object.entries(TIP).map(([k, v]) => [k, v.ad])], v => F.tip = v)),
       field('Zorluk', sel('f-z', F.z, [['', 'Tümü'], [1, 'Kolay'], [2, 'Orta'], [3, 'Zor']], v => F.z = v)),
-      field('Kaynak', sel('f-k', F.k, [['', 'Tümü'], ['sinav', 'Eski sınavlardan'], ['uretim', 'Yeni yazılan'], ['ogretmen', '★ Benim soru bankalarım'], ['ben', 'Elle eklediklerim']], v => F.k = v)),
+      field('Kaynak', sel('f-k', F.k, [['', 'Tümü'], ['sinav', 'Eski sınavlardan'], ['ogretmen', '★ Benim soru bankalarım'], ['ben', 'Elle eklediklerim']], v => F.k = v)),
       (!F.ders || YAZILIM_DERS.includes(F.ders)) ? field('Program', sel('f-yaz', F.yaz || '', [['', 'Tümü'], ['genel', 'Genel (programdan bağımsız)'], ...Object.entries(YAZILIM)], v => F.yaz = v)) : null,
       field('BEP', sel('f-bep', F.bep, [['', 'Tümü'], ['1', 'Sadece BEP'], ['0', 'BEP hariç']], v => F.bep = v)),
       field('Kullanım', sel('f-used', F.used, [['', 'Tümü'], ['1', 'Kullanılmış'], ['0', 'Hiç kullanılmamış']], v => F.used = v))),
