@@ -707,7 +707,7 @@ const TIP = {
 };
 const TIP_SIRA = ['dogru-yanlis', 'bosluk', 'eslestirme', 'coktan', 'kisa', 'acik', 'islem', 'gorev'];
 const ZOR = { 1: 'Kolay', 2: 'Orta', 3: 'Zor' };
-const PROG = { orgun: 'Örgün', mesem: 'MESEM', acik: 'Açık Lise', anadolu: 'Anadolu Lisesi', fen: 'Fen Lisesi' };
+const PROG = { orgun: 'Örgün', mesem: 'MESEM', acik: 'Açık Lise', anadolu: 'Anadolu Lisesi', fen: 'Fen Lisesi', sosyal: 'Sosyal Bilimler Lisesi' };
 const DONEM_AY = ['Eylül', 'Şubat', 'Haziran'];
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -913,7 +913,7 @@ const Auth = (() => {
       <li style="--c:#8fa3b8"><b>Bilgilerim</b><span>Adınız, okulunuz, müdürünüz ve ders programınız bir kez girilir; bütün belgelere kendiliğinden yazılır.</span></li>
       <li style="--c:#9a5b13"><b>ŞÖK tutanağı</b><span>Şube öğretmenler kurulu tutanağı; öğretmen listesi, ders ortalamaları ve sınıf mevcuduyla.</span></li>
     </ul>
-    <p class="gt-not"><b>Branşlar:</b> Muhasebe ve Finansman alanının soru bankası, yıllık plan ve zümre içerikleri; lise Matematik derslerinin yıllık planları hazır. Diğer branşlardaki öğretmenler Kulüpler ve ŞÖK'ü hemen kullanabilir; branş içerikleri hazırlanıyor. Üyelik şimdilik ücretsiz.</p>
+    <p class="gt-not"><b>Branşlar:</b> Muhasebe ve Finansman alanının soru bankası, yıllık plan ve zümre içerikleri; lise Matematik ve Fizik derslerinin yıllık planları ve soru bankaları hazır. Diğer branşlardaki öğretmenler Kulüpler ve ŞÖK'ü hemen kullanabilir; branş içerikleri hazırlanıyor. Üyelik şimdilik ücretsiz.</p>
   </section>`;
   let sonEposta = '';
   function ekran(mod, mesaj, tur) {
@@ -3389,11 +3389,13 @@ function takvimKutusu(yil) {
 }
 
 /* ---------- sekme ---------- */
+/* Okul adı Fen/Sosyal Bilimler Lisesi ise o programın planı varsayılan gelir */
+function pVarsayilan() { const o = String((PROFIL && PROFIL.okul) || '').toLocaleUpperCase('tr'); const vp = /FEN LİSESİ/.test(o) ? 'fen' : /SOSYAL BİLİMLER/.test(o) ? 'sosyal' : null; return (vp && PLAN.planlar.find(x => x.sinif === 9 && pProg(x) === vp)) || PLAN.planlar.find(x => x.sinif === 9) || PLAN.planlar[0]; }
 function viewPlan(m) {
   const P = PS(); const sv = () => save.settings(); const yil = aktifYil();
   m.append(h('h1', {}, 'Yıllık planlar'), h('p', { class: 'lead' }, 'Türkiye Yüzyılı Maarif Modeli öğretim programlarına göre çerçeve yıllık planlar. Plan, seçtiğiniz öğretim yılının çalışma takvimine göre haftalara yeniden dağıtılır: tatil ve bayram haftaları atlanır, yazılı sınav haftaları ve belirli gün ve haftalar kendiliğinden yerleşir. Excel ve Word olarak indirip düzenleyebilirsiniz.'));
   if (!P.secElle) { const BP = [...benimPlanIdleri()]; if (BP.length && !BP.includes(String(P.sec).replace(/^acik-/, ''))) P.sec = BP[0]; }
-  const p = pById(P.sec) || PLAN.planlar.find(x => x.sinif === 9) || PLAN.planlar[0]; if (!p) { m.append(h('p', {}, 'Plan verisi yok.')); return; }
+  const p = pById(P.sec) || pVarsayilan(); if (!p) { m.append(h('p', {}, 'Plan verisi yok.')); return; }
   m.append(h('div', { class: 'card', style: { display: 'grid', gap: '10px' } },
     h('div', { class: 'row' }, yilAlani(render),
       field('Okul adı', h('input', { type: 'text', value: S.settings.okul || '', style: { width: 'min(26rem,100%)' }, onchange: e => { S.settings.okul = e.target.value.trim(); sv(); } })),
@@ -4205,7 +4207,8 @@ function secKutu({ deger = '', secenekler = [], ph = '', sec, kapali = false, bo
 const ICERIKLI_SEKME = ['sinav', 'banka', 'odev', 'plan', 'zumre'];
 /* Branşa göre hazır içerik. Anahtar: meslek alan öğretmeninde alan adı, lise ortak derslerinde branş adı (sunucudaki icerik_alani() ile aynı kural). */
 const P_LISE_OKUL = ['lise', 'aihl', 'mtal', 'mesem', 'acik', 'bilsem'];
-const ICERIK_KAPSAM = { 'Muhasebe ve Finansman': ['sinav', 'banka', 'odev', 'plan', 'zumre'], 'Matematik': ['plan', 'sinav', 'banka'] };
+const ICERIK_KAPSAM = { 'Muhasebe ve Finansman': ['sinav', 'banka', 'odev', 'plan', 'zumre'], 'Matematik': ['plan', 'sinav', 'banka'], 'Fizik': ['plan', 'sinav', 'banka'] };
+function liseBranslari() { const L = Object.keys(ICERIK_KAPSAM).filter(k => k !== 'Muhasebe ve Finansman'); return L.length > 1 ? L.slice(0, -1).join(', ') + ' ve ' + L[L.length - 1] : L[0] || ''; }
 function icerikAlani(p = PROFIL) {
   if (!p) return null;
   if (P_MESLEK_OKUL.includes(p.okul_turu) && p.brans === P_ALAN_OGR) return p.alan || null;
@@ -4321,7 +4324,7 @@ function viewHazirlaniyor(m, v) {
     h('h2', { style: { margin: 0 } }, '🔒 Branşınız için içerik hazırlanıyor'),
     hazir.length
       ? h('p', { style: { margin: 0 } }, `${bransMetni()} branşında şu an ${hazir.map(x => SEKME_AD[x]).join(', ')} bölümü hazır. ${ad} bölümü üzerinde çalışıyoruz.`)
-      : h('p', { style: { margin: 0 } }, `${ad} bölümü şu anda Muhasebe ve Finansman alan öğretmenleri ile lise Matematik öğretmenleri için hazır. ${bransMetni() ? '"' + bransMetni() + '" branşı' : 'Branşınız'} için içerikler üzerinde çalışıyoruz.`),
+      : h('p', { style: { margin: 0 } }, `${ad} bölümü şu anda Muhasebe ve Finansman alan öğretmenleri ile lise ${liseBranslari()} öğretmenleri için hazır. ${bransMetni() ? '"' + bransMetni() + '" branşı' : 'Branşınız'} için içerikler üzerinde çalışıyoruz.`),
     h('p', { style: { margin: 0 } }, 'Bu sırada şunları kullanabilirsiniz:'),
     h('div', { class: 'row' }, ...hazir.map(x => h('button', { class: 'btn pri', type: 'button', onclick: () => setView(x) }, SEKME_AD[x])), h('button', { class: 'btn' + (hazir.length ? '' : ' pri'), type: 'button', onclick: () => setView('kulup') }, 'Kulüpler'), h('button', { class: 'btn pri', type: 'button', onclick: () => setView('sok') }, 'ŞÖK tutanağı'), h('button', { class: 'btn', type: 'button', onclick: () => setView('bilgi') }, 'Bilgilerim')),
     h('p', { class: 'small muted', style: { margin: 0 } }, 'Branşınızla ilgili önerileriniz ya da örnek belgeleriniz varsa sol üstteki "Bize yazın" bağlantısından paylaşabilirsiniz.')));
