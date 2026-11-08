@@ -913,7 +913,7 @@ const Auth = (() => {
       <li style="--c:#8fa3b8"><b>Bilgilerim</b><span>Adınız, okulunuz, müdürünüz ve ders programınız bir kez girilir; bütün belgelere kendiliğinden yazılır.</span></li>
       <li style="--c:#9a5b13"><b>ŞÖK tutanağı</b><span>Şube öğretmenler kurulu tutanağı; öğretmen listesi, ders ortalamaları ve sınıf mevcuduyla.</span></li>
     </ul>
-    <p class="gt-not"><b>Branşlar:</b> Muhasebe ve Finansman alanının soru bankası, yıllık plan ve zümre içerikleri; lise Matematik, Fizik, Kimya, Biyoloji, Tarih (T.C. İnkılap Tarihi dâhil), Coğrafya, Felsefe (Mantık, Psikoloji, Sosyoloji dâhil) Türk Dili ve Edebiyatı (hazırlık sınıfı dâhil), Din Kültürü ve Ahlak Bilgisi ve İngilizce (hazırlık sınıfı dâhil) derslerinin yıllık planları ve soru bankaları hazır. Diğer branşlardaki öğretmenler Kulüpler ve ŞÖK'ü hemen kullanabilir; branş içerikleri hazırlanıyor. Üyelik şimdilik ücretsiz.</p>
+    <p class="gt-not"><b>Branşlar:</b> Muhasebe ve Finansman alanının soru bankası, yıllık plan ve zümre içerikleri; lise Matematik, Fizik, Kimya, Biyoloji, Tarih (T.C. İnkılap Tarihi dâhil), Coğrafya, Felsefe (Mantık, Psikoloji, Sosyoloji dâhil) Türk Dili ve Edebiyatı (hazırlık sınıfı dâhil), Din Kültürü ve Ahlak Bilgisi, İngilizce (hazırlık sınıfı dâhil) ve Beden Eğitimi ve Spor derslerinin yıllık planları ve soru bankaları hazır. Diğer branşlardaki öğretmenler Kulüpler ve ŞÖK'ü hemen kullanabilir; branş içerikleri hazırlanıyor. Üyelik şimdilik ücretsiz.</p>
   </section>`;
   let sonEposta = '';
   function ekran(mod, mesaj, tur) {
@@ -4207,7 +4207,7 @@ function secKutu({ deger = '', secenekler = [], ph = '', sec, kapali = false, bo
 const ICERIKLI_SEKME = ['sinav', 'banka', 'odev', 'plan', 'zumre'];
 /* Branşa göre hazır içerik. Anahtar: meslek alan öğretmeninde alan adı, lise ortak derslerinde branş adı (sunucudaki icerik_alani() ile aynı kural). */
 const P_LISE_OKUL = ['lise', 'aihl', 'mtal', 'mesem', 'acik', 'bilsem'];
-const ICERIK_KAPSAM = { 'Muhasebe ve Finansman': ['sinav', 'banka', 'odev', 'plan', 'zumre'], 'Matematik': ['plan', 'sinav', 'banka'], 'Fizik': ['plan', 'sinav', 'banka'], 'Kimya': ['plan', 'sinav', 'banka'], 'Biyoloji': ['plan', 'sinav', 'banka'], 'Tarih': ['plan', 'sinav', 'banka'], 'Coğrafya': ['plan', 'sinav', 'banka'], 'Felsefe': ['plan', 'sinav', 'banka'], 'Türk Dili ve Edebiyatı': ['plan', 'sinav', 'banka'], 'Din Kültürü ve Ahlak Bilgisi': ['plan', 'sinav', 'banka'], 'İngilizce': ['plan', 'sinav', 'banka'] };
+const ICERIK_KAPSAM = { 'Muhasebe ve Finansman': ['sinav', 'banka', 'odev', 'plan', 'zumre'], 'Matematik': ['plan', 'sinav', 'banka'], 'Fizik': ['plan', 'sinav', 'banka'], 'Kimya': ['plan', 'sinav', 'banka'], 'Biyoloji': ['plan', 'sinav', 'banka'], 'Tarih': ['plan', 'sinav', 'banka'], 'Coğrafya': ['plan', 'sinav', 'banka'], 'Felsefe': ['plan', 'sinav', 'banka'], 'Türk Dili ve Edebiyatı': ['plan', 'sinav', 'banka'], 'Din Kültürü ve Ahlak Bilgisi': ['plan', 'sinav', 'banka'], 'İngilizce': ['plan', 'sinav', 'banka'], 'Beden Eğitimi ve Spor': ['plan', 'sinav', 'banka'] };
 function liseBranslari() { const L = Object.keys(ICERIK_KAPSAM).filter(k => k !== 'Muhasebe ve Finansman'); return L.length > 1 ? L.slice(0, -1).join(', ') + ' ve ' + L[L.length - 1] : L[0] || ''; }
 function icerikAlani(p = PROFIL) {
   if (!p) return null;
