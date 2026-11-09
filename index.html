@@ -707,7 +707,7 @@ const TIP = {
 };
 const TIP_SIRA = ['dogru-yanlis', 'bosluk', 'eslestirme', 'coktan', 'kisa', 'acik', 'islem', 'gorev'];
 const ZOR = { 1: 'Kolay', 2: 'Orta', 3: 'Zor' };
-const PROG = { orgun: 'Örgün', mesem: 'MESEM', acik: 'Açık Lise', anadolu: 'Anadolu Lisesi', fen: 'Fen Lisesi', sosyal: 'Sosyal Bilimler Lisesi' };
+const PROG = { orgun: 'Örgün', mesem: 'MESEM', acik: 'Açık Lise', anadolu: 'Anadolu Lisesi', fen: 'Fen Lisesi', sosyal: 'Sosyal Bilimler Lisesi', aihl: 'Anadolu İmam Hatip Lisesi', spor: 'Spor Lisesi', gsl: 'Güzel Sanatlar Lisesi' };
 const DONEM_AY = ['Eylül', 'Şubat', 'Haziran'];
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -3390,7 +3390,7 @@ function takvimKutusu(yil) {
 
 /* ---------- sekme ---------- */
 /* Okul adı Fen/Sosyal Bilimler Lisesi ise o programın planı varsayılan gelir */
-function pVarsayilan() { const o = String((PROFIL && PROFIL.okul) || '').toLocaleUpperCase('tr'); const vp = /FEN LİSESİ/.test(o) ? 'fen' : /SOSYAL BİLİMLER/.test(o) ? 'sosyal' : null; return (vp && PLAN.planlar.find(x => x.sinif === 9 && pProg(x) === vp)) || PLAN.planlar.find(x => x.sinif === 9) || PLAN.planlar[0]; }
+function pVarsayilan() { const o = String((PROFIL && PROFIL.okul) || '').toLocaleUpperCase('tr'); const vp = /FEN LİSESİ/.test(o) ? 'fen' : /SOSYAL BİLİMLER/.test(o) ? 'sosyal' : /SPOR LİSESİ/.test(o) ? 'spor' : /GÜZEL SANATLAR/.test(o) ? 'gsl' : (PROFIL && PROFIL.okul_turu === 'aihl') || /İMAM HATİP/.test(o) ? 'aihl' : null; return (vp && PLAN.planlar.find(x => x.sinif === 9 && pProg(x) === vp)) || PLAN.planlar.find(x => x.sinif === 9) || PLAN.planlar[0]; }
 function viewPlan(m) {
   const P = PS(); const sv = () => save.settings(); const yil = aktifYil();
   m.append(h('h1', {}, 'Yıllık planlar'), h('p', { class: 'lead' }, 'Türkiye Yüzyılı Maarif Modeli öğretim programlarına göre çerçeve yıllık planlar. Plan, seçtiğiniz öğretim yılının çalışma takvimine göre haftalara yeniden dağıtılır: tatil ve bayram haftaları atlanır, yazılı sınav haftaları ve belirli gün ve haftalar kendiliğinden yerleşir. Excel ve Word olarak indirip düzenleyebilirsiniz.'));
