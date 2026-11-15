@@ -4147,14 +4147,14 @@ const P_OKUL = [
   ['lise', 'Anadolu / Fen / Sosyal Bilimler Lisesi'], ['aihl', 'Anadolu İmam Hatip Lisesi'], ['mtal', 'Mesleki ve Teknik Anadolu Lisesi'],
   ['mesem', 'Mesleki Eğitim Merkezi (MESEM)'], ['acik', 'Açık Öğretim Lisesi'], ['halk', 'Halk Eğitim Merkezi'],
   ['ozel', 'Özel eğitim kurumu'], ['bilsem', 'Bilim ve Sanat Merkezi (BİLSEM)'], ['diger', 'Diğer']];
-const P_MESLEK_OKUL = ['mtal', 'mesem', 'acik'];
+const P_MESLEK_OKUL = ['mtal', 'mesem', 'acik', 'aihl']; // aihl: B grubu Çocuk Gelişimi/Fen ve Teknoloji alan öğretmenleri
 const P_ALAN_OGR = 'Alan öğretmeni (meslek dersleri)';
 const P_LISE = ['Türk Dili ve Edebiyatı', 'Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Tarih', 'Coğrafya', 'Felsefe', 'Din Kültürü ve Ahlak Bilgisi', 'İngilizce', 'Almanca', 'Fransızca', 'Arapça', 'Beden Eğitimi ve Spor', 'Görsel Sanatlar', 'Müzik', 'Tiyatro', 'Bilişim Teknolojileri', 'Sağlık Bilgisi ve Trafik Kültürü', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'];
 const P_ORTA = ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce', 'Almanca', 'Arapça', 'Din Kültürü ve Ahlak Bilgisi', 'Beden Eğitimi ve Spor', 'Görsel Sanatlar', 'Müzik', 'Teknoloji ve Tasarım', 'Bilişim Teknolojileri ve Yazılım', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'];
 const P_BRANS = {
   okuloncesi: ['Okul Öncesi Öğretmeni', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'],
   ilkokul: ['Sınıf Öğretmeni', 'İngilizce', 'Din Kültürü ve Ahlak Bilgisi', 'Beden Eğitimi ve Spor', 'Rehberlik ve Psikolojik Danışmanlık', 'Özel Eğitim'],
-  ortaokul: P_ORTA.concat(['İmam Hatip meslek dersleri']), lise: P_LISE, aihl: P_LISE.concat(['İmam Hatip meslek dersleri']),
+  ortaokul: P_ORTA.concat(['İmam Hatip meslek dersleri']), lise: P_LISE, aihl: P_LISE.concat(['İmam Hatip meslek dersleri', P_ALAN_OGR]),
   mtal: [P_ALAN_OGR].concat(P_LISE), mesem: [P_ALAN_OGR].concat(P_LISE), acik: [P_ALAN_OGR].concat(P_LISE),
   halk: ['Usta öğretici / kurs öğretmeni', 'Okuma-yazma kursu öğretmeni'].concat(P_LISE), ozel: ['Özel Eğitim', 'Sınıf Öğretmeni', 'Rehberlik ve Psikolojik Danışmanlık'],
   bilsem: P_LISE, diger: [] };
